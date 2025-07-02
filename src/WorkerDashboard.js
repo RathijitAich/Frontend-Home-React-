@@ -347,6 +347,7 @@ const WorkerDashboard = ({ worker_email, setWorkerEmail }) => {
         <div className="nav-links">
           <Link to="/WorkerDashboard"><i className="fas fa-tachometer-alt"></i> Dashboard</Link>
           <Link to="/worker-notifications"><i className="fas fa-bell"></i> Notifications</Link>
+          <Link to="/chat" className="chat-link"><i className="fas fa-comments"></i> Chat</Link>
           
         </div>
         <div className="user-menu">

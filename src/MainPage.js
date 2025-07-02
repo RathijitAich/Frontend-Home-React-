@@ -297,6 +297,7 @@ const Dashboard = ({ email, setEmail }) => {
         <div className="nav-links">
           <Link to="/main"><i className="fas fa-tachometer-alt"></i> Dashboard</Link>
           <Link to="/Approve"><i className="fas fa-clipboard-check"></i> Approve Requests</Link>
+          <Link to="/chat"><i className="fas fa-comments"></i> Chat</Link>
         </div>
         <div className="user-menu">
           <div className="user-avatar">{user.initials}</div>

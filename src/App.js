@@ -17,6 +17,8 @@ import CurrentJob from './CurrentJob';
 
 import Approve from './Approve';
 
+import Chat from './Chat_experiment';
+
 function App() {
 
 
@@ -52,6 +54,7 @@ function App() {
         <Route path="/current-jobs" element={<CurrentJob worker_email={worker_email} setWorkerEmail={setWorkerEmail} />} />
 
         <Route path="/Approve" element={<Approve email={email} setEmail={setEmail} />} />
+        <Route path ="/chat" element={<Chat email={email} worker_email={worker_email} />} />
 
                 
         
