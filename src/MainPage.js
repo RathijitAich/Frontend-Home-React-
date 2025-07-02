@@ -4,52 +4,60 @@ import PropTypes from 'prop-types';
 import axios from "axios";
 
 const Dashboard = ({ email, setEmail }) => {
-    const [currentDate, setCurrentDate] = useState("");
-    const [homeowner, setHomeowner] = useState(null);
-    const navigate = useNavigate();
-    
-    useEffect(() => {
-        const fetchHomeownerDetails = async () => {
-            try {
-                const response = await axios.get(`http://localhost:8080/api/homeowner/${email}`);
-                setHomeowner(response.data);
-            } catch (error) {
-                console.error("Failed to fetch homeowner:", error);
-            }
-        };
+  const [currentDate, setCurrentDate] = useState("");
+  const [homeowner, setHomeowner] = useState(null);
+  
+  const navigate = useNavigate();
 
-        if (email) {
-            fetchHomeownerDetails();
+  useEffect(() => {
+    const fetchHomeownerDetails = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/api/homeowner/${encodeURIComponent(email)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setHomeowner(data);
+        } else {
+          console.error("Failed to fetch homeowner details");
         }
-    }, [email]);
-
-    const user = {
-        name: homeowner ? homeowner.name : "Guest",
-        initials: homeowner ? homeowner.name.split(' ').map(n => n[0]).join('').toUpperCase() : "G",
-        firstName: homeowner ? homeowner.name.split(' ')[0] : "Guest",
+      } catch (error) {
+        console.error("Failed to fetch homeowner:", error);
+      }
     };
 
-    useEffect(() => {
-        const now = new Date();
-        const options = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
-        setCurrentDate(now.toLocaleDateString("en-US", options));
-    }, []);
+    if (email) {
+      fetchHomeownerDetails();
+    }
+  }, [email]);
 
-    const handleLogout = () => {
-        if (window.confirm("Are you sure you want to logout?")) {
-            setEmail("");
-            localStorage.removeItem("homeowner_email");
-            setHomeowner(null);
-            navigate("/login");
-        }
-    };
+  const user = {
+    name: homeowner ? homeowner.name : "Guest",
+    initials: homeowner ? homeowner.name.split(' ').map(n => n[0]).join('').toUpperCase() : "G",
+    firstName: homeowner ? homeowner.name.split(' ')[0] : "Guest",
+  };
 
-    return (
-        <div>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
-            
-            <style>{`
+  useEffect(() => {
+    const now = new Date();
+    const options = { weekday: "long", year: "numeric", month: "long", day: "numeric" };
+    setCurrentDate(now.toLocaleDateString("en-US", options));
+  }, []);
+
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to logout?")) {
+      setEmail("");
+      localStorage.removeItem("homeowner_email");
+      setHomeowner(null);
+      navigate("/login");
+    }
+  };
+
+
+
+  return (
+    <div>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
+
+      <style>{`
         * {
           font-family: 'Poppins', sans-serif;
         }
@@ -269,95 +277,95 @@ const Dashboard = ({ email, setEmail }) => {
         }
       `}</style>
 
-            {/* navbar */}
-            <nav className="dashboard-navbar">
-                <div className="logo">
-                    <i className="fas fa-home-user"></i>
-                    HomeManager
-                </div>
-                <div className="nav-links">
-                    <Link to="/main"><i className="fas fa-tachometer-alt"></i> Dashboard</Link>
-                    <Link to="/Approve"><i className="fas fa-clipboard-check"></i> Approve Requests</Link>
-                </div>
-                <div className="user-menu">
-                    <div className="user-avatar">{user.initials}</div>
-                    <div className="user-name">{user.name}</div>
-                    <button className="logout-btn" onClick={handleLogout}>
-                        <i className="fas fa-sign-out-alt"></i>
-                        Logout
-                    </button>
-                </div>
-            </nav>
-
-            {/* Dashboard Content */}
-            <div className="container">
-                <section className="dashboard">
-                    <div className="welcome-card">
-                        <h1>Welcome back, {user.firstName}</h1>
-                        <div className="date-display">
-                            <i className="far fa-calendar-alt"></i>
-                            <span style={{ marginLeft: 8 }}>{currentDate}</span>
-                        </div>
-                        <p>Here's what's happening with your home today.</p>
-                        <div className="quick-stats">
-                            <div className="stat">
-                                <h3>Pending Tasks</h3>
-                                <p>3</p>
-                            </div>
-                            <div className="stat">
-                                <h3>Bills Due</h3>
-                                <p>2</p>
-                            </div>
-                            <div className="stat">
-                                <h3>Active Rooms</h3>
-                                <p>4</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="feature-cards">
-                        {/* Room Setup Card */}
-                        <div className="feature-card">
-                            <div className="feature-icon">
-                                <i className="fas fa-door-open"></i>
-                            </div>
-                            <h2>Set Up Your Rooms</h2>
-                            <p>Create and customize rooms in your home. Track inventory, dimensions, and conditions.</p>
-                            <a href="room-setup.html" className="feature-btn">
-                                Manage Rooms <i className="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                        {/* Maintenance Card */}
-                        <div className="feature-card">
-                            <div className="feature-icon">
-                                <i className="fas fa-tools"></i>
-                            </div>
-                            <h2>Request Maintenance</h2>
-                            <p>Schedule repairs, track ongoing maintenance, and keep history of all home services.</p>
-                            <Link to="/Req_main" className="feature-btn">
-                                Request Service <i className="fas fa-arrow-right"></i>
-                            </Link>
-                        </div>
-                        {/* Bill Prediction Card */}
-                        <div className="feature-card">
-                            <div className="feature-icon">
-                                <i className="fas fa-chart-line"></i>
-                            </div>
-                            <h2>Predict Your Bills</h2>
-                            <p>Analyze past utility usage and predict future expenses with our smart estimator.</p>
-                            <a href="bill-predictor.html" className="feature-btn">
-                                View Predictions <i className="fas fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
-                </section>
-            </div>
+      {/* navbar */}
+      <nav className="dashboard-navbar">
+        <div className="logo">
+          <i className="fas fa-home-user"></i>
+          HomeManager
         </div>
-    );
+        <div className="nav-links">
+          <Link to="/main"><i className="fas fa-tachometer-alt"></i> Dashboard</Link>
+          <Link to="/Approve"><i className="fas fa-clipboard-check"></i> Approve Requests</Link>
+        </div>
+        <div className="user-menu">
+          <div className="user-avatar">{user.initials}</div>
+          <div className="user-name">{user.name}</div>
+          <button className="logout-btn" onClick={handleLogout}>
+            <i className="fas fa-sign-out-alt"></i>
+            Logout
+          </button>
+        </div>
+      </nav>
+
+      {/* Dashboard Content */}
+      <div className="container">
+        <section className="dashboard">
+          <div className="welcome-card">
+            <h1>Welcome back, {user.firstName}</h1>
+            <div className="date-display">
+              <i className="far fa-calendar-alt"></i>
+              <span style={{ marginLeft: 8 }}>{currentDate}</span>
+            </div>
+            <p>Here's what's happening with your home today.</p>
+            <div className="quick-stats">
+              <div className="stat">
+                <h3>Pending Tasks</h3>
+                <p>3</p>
+              </div>
+              <div className="stat">
+                <h3>Bills Due</h3>
+                <p>2</p>
+              </div>
+              <div className="stat">
+                <h3>Active Rooms</h3>
+                <p>4</p>
+              </div>
+            </div>
+          </div>
+          <div className="feature-cards">
+            {/* Room Setup Card */}
+            <div className="feature-card">
+              <div className="feature-icon">
+                <i className="fas fa-door-open"></i>
+              </div>
+              <h2>Set Up Your Rooms</h2>
+              <p>Create and customize rooms in your home. Track inventory, dimensions, and conditions.</p>
+              <a href="room-setup.html" className="feature-btn">
+                Manage Rooms <i className="fas fa-arrow-right"></i>
+              </a>
+            </div>
+            {/* Maintenance Card */}
+            <div className="feature-card">
+              <div className="feature-icon">
+                <i className="fas fa-tools"></i>
+              </div>
+              <h2>Request Maintenance</h2>
+              <p>Schedule repairs, track ongoing maintenance, and keep history of all home services.</p>
+              <Link to="/Req_main" className="feature-btn">
+                Request Service <i className="fas fa-arrow-right"></i>
+              </Link>
+            </div>
+            {/* Bill Prediction Card */}
+            <div className="feature-card">
+              <div className="feature-icon">
+                <i className="fas fa-chart-line"></i>
+              </div>
+              <h2>Predict Your Bills</h2>
+              <p>Analyze past utility usage and predict future expenses with our smart estimator.</p>
+              <a href="bill-predictor.html" className="feature-btn">
+                View Predictions <i className="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 };
 
 Dashboard.propTypes = {
-    email: PropTypes.string,
-    setEmail: PropTypes.func.isRequired,
+  email: PropTypes.string.isRequired,
+  setEmail: PropTypes.func.isRequired,
 };
 
 export default Dashboard;
