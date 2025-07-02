@@ -6,7 +6,7 @@ import axios from "axios";
 const Dashboard = ({ email, setEmail }) => {
   const [currentDate, setCurrentDate] = useState("");
   const [homeowner, setHomeowner] = useState(null);
-  
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,6 +21,9 @@ const Dashboard = ({ email, setEmail }) => {
         }
       } catch (error) {
         console.error("Failed to fetch homeowner:", error);
+      }
+      finally{
+        setLoading(false);
       }
     };
 
@@ -49,6 +52,14 @@ const Dashboard = ({ email, setEmail }) => {
       navigate("/login");
     }
   };
+
+  if(loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div> your emai is {email}Loading...</div>
+      </div>
+    );
+  }
 
 
 
