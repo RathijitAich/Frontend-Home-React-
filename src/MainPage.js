@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import PropTypes from 'prop-types';
-import axios from "axios";
 
-const Dashboard = ({ email, setEmail }) => {
+
+const Dashboard = ({ email, setEmail , worker_email }) => {
   const [currentDate, setCurrentDate] = useState("");
   const [homeowner, setHomeowner] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  email = localStorage.getItem("email") || email;
 
   useEffect(() => {
     const fetchHomeownerDetails = async () => {
@@ -56,7 +57,9 @@ const Dashboard = ({ email, setEmail }) => {
   if(loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <div> your emai is {email}Loading...</div>
+      <div>
+        {email ? "Loading..." : "Loading email..."}
+      </div>
       </div>
     );
   }
@@ -289,10 +292,12 @@ const Dashboard = ({ email, setEmail }) => {
       `}</style>
 
       {/* navbar */}
-      <nav className="dashboard-navbar">
+      {/* <nav className="dashboard-navbar">
         <div className="logo">
           <i className="fas fa-home-user"></i>
           HomeManager
+          you are logged in as {email}
+          you are logged in as{worker_email}
         </div>
         <div className="nav-links">
           <Link to="/main"><i className="fas fa-tachometer-alt"></i> Dashboard</Link>
@@ -307,7 +312,7 @@ const Dashboard = ({ email, setEmail }) => {
             Logout
           </button>
         </div>
-      </nav>
+      </nav> */}
 
       {/* Dashboard Content */}
       <div className="container">
@@ -378,6 +383,7 @@ const Dashboard = ({ email, setEmail }) => {
 Dashboard.propTypes = {
   email: PropTypes.string.isRequired,
   setEmail: PropTypes.func.isRequired,
+  worker_email: PropTypes.string
 };
 
 export default Dashboard;

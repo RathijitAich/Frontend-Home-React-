@@ -478,7 +478,7 @@ const CurrentJob = ({ worker_email, setWorkerEmail }) => {
       `}</style>
 
       {/* Navbar */}
-      <nav className="dashboard-navbar">
+      {/* <nav className="dashboard-navbar">
         <div className="logo">
           <i className="fas fa-tools"></i>
           WorkerPortal
@@ -496,7 +496,7 @@ const CurrentJob = ({ worker_email, setWorkerEmail }) => {
             Logout
           </button>
         </div>
-      </nav>
+      </nav> */}
 
       <div className="container">
         {/* Page Header */}

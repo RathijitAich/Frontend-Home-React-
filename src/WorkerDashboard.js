@@ -76,7 +76,7 @@ const WorkerDashboard = ({ worker_email, setWorkerEmail }) => {
           padding: 30px 0;
         }
         .welcome-card {
-          background-color: var(--worker-color, #059669);
+          background-color: var(--worker-color,rgb(62, 44, 114));
           color: var(--white, #fff);
           padding: 40px;
           border-radius: 0;
@@ -339,7 +339,7 @@ const WorkerDashboard = ({ worker_email, setWorkerEmail }) => {
       `}</style>
 
       {/* Navbar */}
-      <nav className="dashboard-navbar">
+      {/* <nav className="dashboard-navbar">
         <div className="logo">
           <i className="fas fa-tools"></i>
           WorkerPortal
@@ -358,7 +358,7 @@ const WorkerDashboard = ({ worker_email, setWorkerEmail }) => {
             Logout
           </button>
         </div>
-      </nav>
+      </nav> */}
 
       {/* Dashboard Content */}
       <div className="container">

@@ -416,7 +416,7 @@ function MaintenanceRequest({ email, setEmail }) {
       `}</style>
 
       {/* Navbar */}
-      <nav className="dashboard-navbar">
+      {/* <nav className="dashboard-navbar">
         <div className="logo">
           <i className="fas fa-home-user"></i>
           HomeManager
@@ -434,7 +434,7 @@ function MaintenanceRequest({ email, setEmail }) {
             Logout
           </button>
         </div>
-      </nav>
+      </nav> */}
 
       <div className="container">
         <div className="breadcrumbs">
