@@ -12,6 +12,11 @@ const ChatExperiment = ({ email, worker_email }) => {
   const [loading, setLoading] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showNewConversation, setShowNewConversation] = useState(false);
+  const [newConversationEmail, setNewConversationEmail] = useState('');
+  const [newConversationMessage, setNewConversationMessage] = useState('');
+  const [newConversationReceiverType, setNewConversationReceiverType] = useState('');
+  const [startingConversation, setStartingConversation] = useState(false);
   const messagesEndRef = useRef(null);
   
   const user_email = email || worker_email;
@@ -218,7 +223,7 @@ const ChatExperiment = ({ email, worker_email }) => {
   };
 
   // Enhanced send message function
-   const handleSendMessage = async () => {
+  const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || sendingMessage) {
       console.log('Cannot send message:', {
         hasMessage: !!newMessage.trim(),
@@ -251,15 +256,6 @@ const ChatExperiment = ({ email, worker_email }) => {
         // Clear input immediately for better UX
         setNewMessage('');
         
-        // DON'T add message optimistically - let WebSocket handle it
-        // Remove these lines:
-        // const optimisticMessage = {
-        //   ...messageToSend,
-        //   sentAt: new Date().toISOString(),
-        //   id: Date.now()
-        // };
-        // setMessages(prev => [...prev, optimisticMessage]);
-        
       } else {
         // Method 2: Fallback to HTTP API
         console.log('WebSocket not available, sending via HTTP...');
@@ -279,6 +275,88 @@ const ChatExperiment = ({ email, worker_email }) => {
       alert('Failed to send message. Please try again.');
     } finally {
       setSendingMessage(false);
+    }
+  };
+
+  // UPDATED: Start new conversation function with backend validation
+  const handleStartConversation = async () => {
+    if (!newConversationEmail.trim() || !newConversationMessage.trim() || !newConversationReceiverType || startingConversation) {
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newConversationEmail.trim())) {
+      alert('Please enter a valid email address');
+      return;
+    }
+
+    // Check if trying to message themselves
+    if (newConversationEmail.trim().toLowerCase() === user_email.toLowerCase()) {
+      alert('You cannot send a message to yourself');
+      return;
+    }
+
+    setStartingConversation(true);
+
+    try {
+      // Use the new StartConversation endpoint
+      const conversationData = {
+        senderEmail: user_email,
+        receiverEmail: newConversationEmail.trim(),
+        receiverType: newConversationReceiverType,
+        messageContent: newConversationMessage.trim()
+      };
+
+      console.log('Starting new conversation with validation:', conversationData);
+
+      // Call the StartConversation endpoint
+      const response = await axios.post('http://localhost:8080/api/StartConversation', conversationData);
+      console.log('Conversation started successfully:', response.data);
+
+      // Clear form and close modal
+      setNewConversationEmail('');
+      setNewConversationMessage('');
+      setNewConversationReceiverType('');
+      setShowNewConversation(false);
+
+      // Show success message
+      alert('Conversation started successfully!');
+
+      // Refresh conversations to show new conversation
+      setTimeout(() => {
+        fetchConversations();
+      }, 500);
+
+      // Auto-select the new conversation
+      setTimeout(() => {
+        const newConversation = {
+          participant: {
+            email: newConversationEmail.trim(),
+            name: newConversationEmail.trim().split('@')[0],
+            avatar: newConversationEmail.trim().charAt(0).toUpperCase(),
+            profession: 'User',
+            status: 'online'
+          },
+          id: newConversationEmail.trim().toLowerCase(),
+          messages: [],
+          lastMessage: conversationData.messageContent,
+          lastMessageTime: 'now',
+          messageCount: 1
+        };
+        setSelectedConversation(newConversation);
+        setMessages([{
+          ...response.data,
+          id: response.data.id || Date.now()
+        }]);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      alert('The given Email does not exist , check your requests to find workers email, Please check the email and try again.');
+      
+    } finally {
+      setStartingConversation(false);
     }
   };
 
@@ -312,9 +390,25 @@ const ChatExperiment = ({ email, worker_email }) => {
     }
   };
 
+  const handleNewConversationKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleStartConversation();
+    }
+  };
+
   // Auto-resize textarea
   const handleMessageInputChange = (e) => {
     setNewMessage(e.target.value);
+    
+    // Auto-resize textarea
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+  };
+
+  const handleNewConversationMessageChange = (e) => {
+    setNewConversationMessage(e.target.value);
     
     // Auto-resize textarea
     const textarea = e.target;
@@ -422,6 +516,29 @@ const ChatExperiment = ({ email, worker_email }) => {
           color: #007bff;
           font-weight: 500;
           margin-top: 5px;
+        }
+
+        .new-conversation-btn {
+          background: #007bff;
+          color: white;
+          border: none;
+          padding: 10px 15px;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 15px;
+          width: 100%;
+          justify-content: center;
+        }
+
+        .new-conversation-btn:hover {
+          background: #0056b3;
+          transform: translateY(-1px);
         }
 
         .search-container {
@@ -759,6 +876,188 @@ const ChatExperiment = ({ email, worker_email }) => {
           100% { transform: rotate(360deg); }
         }
 
+        /* New Conversation Modal */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+        }
+
+        .modal-content {
+          background: white;
+          border-radius: 12px;
+          padding: 25px;
+          max-width: 500px;
+          width: 100%;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .modal-title {
+          font-size: 1.3rem;
+          font-weight: 600;
+          color: #343a40;
+          margin: 0;
+        }
+
+        .close-button {
+          background: none;
+          border: none;
+          font-size: 1.5rem;
+          cursor: pointer;
+          color: #6c757d;
+          padding: 5px;
+          border-radius: 50%;
+          transition: all 0.3s ease;
+        }
+
+        .close-button:hover {
+          background: #f8f9fa;
+          color: #343a40;
+        }
+
+        .form-group {
+          margin-bottom: 20px;
+        }
+
+        .form-label {
+          display: block;
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: #495057;
+          margin-bottom: 8px;
+        }
+
+        .form-input {
+          width: 100%;
+          padding: 12px;
+          border: 1px solid #ced4da;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          color: #495057;
+          background: #f8f9fa;
+          transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+          background: white;
+        }
+
+        .form-select {
+          width: 100%;
+          padding: 12px;
+          border: 1px solid #ced4da;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          color: #495057;
+          background: #f8f9fa;
+          transition: all 0.3s ease;
+        }
+
+        .form-select:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+          background: white;
+        }
+
+        .form-textarea {
+          width: 100%;
+          padding: 12px;
+          border: 1px solid #ced4da;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          color: #495057;
+          background: #f8f9fa;
+          resize: vertical;
+          min-height: 100px;
+          max-height: 200px;
+          transition: all 0.3s ease;
+        }
+
+        .form-textarea:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+          background: white;
+        }
+
+        .receiver-type-info {
+          background: #e7f1ff;
+          padding: 10px;
+          border-radius: 6px;
+          margin-bottom: 15px;
+          font-size: 0.85rem;
+          color: #0056b3;
+        }
+
+        .modal-actions {
+          display: flex;
+          gap: 10px;
+          justify-content: flex-end;
+        }
+
+        .cancel-button {
+          background: #6c757d;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .cancel-button:hover {
+          background: #5a6268;
+          transform: translateY(-1px);
+        }
+
+        .start-conversation-button {
+          background: #007bff;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-size: 0.9rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .start-conversation-button:hover:not(:disabled) {
+          background: #0056b3;
+          transform: translateY(-1px);
+        }
+
+        .start-conversation-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
           .chat-sidebar {
@@ -774,6 +1073,15 @@ const ChatExperiment = ({ email, worker_email }) => {
 
           .conversation-item:hover {
             transform: none;
+          }
+
+          .modal-content {
+            padding: 20px;
+            margin: 10px;
+          }
+
+          .modal-actions {
+            flex-direction: column;
           }
         }
 
@@ -813,6 +1121,14 @@ const ChatExperiment = ({ email, worker_email }) => {
               {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
             </div>
           </div>
+
+          <button 
+            className="new-conversation-btn"
+            onClick={() => setShowNewConversation(true)}
+          >
+            <i className="fas fa-plus"></i>
+            Start New Conversation
+          </button>
 
           <div className="search-container">
             <input
@@ -859,7 +1175,7 @@ const ChatExperiment = ({ email, worker_email }) => {
               <div className="empty-state">
                 <i className="fas fa-comments"></i>
                 <h3>No conversations</h3>
-                <p>Start chatting by sending a message to someone</p>
+                <p>Start chatting by clicking "Start New Conversation" above</p>
               </div>
             )}
           </div>
@@ -938,11 +1254,100 @@ const ChatExperiment = ({ email, worker_email }) => {
             <div className="empty-state">
               <i className="fas fa-comment-dots"></i>
               <h3>Select a conversation</h3>
-              <p>Choose someone from the left to start chatting</p>
+              <p>Choose someone from the left to start chatting, or click "Start New Conversation" to reach out to someone new</p>
             </div>
           )}
         </div>
       </div>
+
+      {/* New Conversation Modal with Receiver Type Selection */}
+      {showNewConversation && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3 className="modal-title">Start New Conversation</h3>
+              <button 
+                className="close-button"
+                onClick={() => setShowNewConversation(false)}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="receiver-type-info">
+              <i className="fas fa-info-circle"></i>
+              {user_type === 'homeowner' 
+                ? ' As a homeowner, you can message workers who are registered in our system.'
+                : ' As a worker, you can message homeowners who are registered in our system.'}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Who are you messaging?</label>
+              <select
+                className="form-select"
+                value={newConversationReceiverType}
+                onChange={(e) => setNewConversationReceiverType(e.target.value)}
+                disabled={startingConversation}
+              >
+                <option value="">Select recipient type...</option>
+                <option value="homeowner">Homeowner</option>
+                <option value="worker">Worker</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Recipient Email</label>
+              <input
+                type="email"
+                className="form-input"
+                placeholder="Enter email address..."
+                value={newConversationEmail}
+                onChange={(e) => setNewConversationEmail(e.target.value)}
+                disabled={startingConversation}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Message</label>
+              <textarea
+                className="form-textarea"
+                placeholder="Type your message..."
+                value={newConversationMessage}
+                onChange={handleNewConversationMessageChange}
+                onKeyPress={handleNewConversationKeyPress}
+                disabled={startingConversation}
+              />
+            </div>
+
+            <div className="modal-actions">
+              <button 
+                className="cancel-button"
+                onClick={() => setShowNewConversation(false)}
+                disabled={startingConversation}
+              >
+                Cancel
+              </button>
+              <button
+                className="start-conversation-button"
+                onClick={handleStartConversation}
+                disabled={!newConversationEmail.trim() || !newConversationMessage.trim() || !newConversationReceiverType || startingConversation}
+              >
+                {startingConversation ? (
+                  <>
+                    <div className="spinner" style={{width: '14px', height: '14px', margin: 0}}></div>
+                    Starting...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-paper-plane"></i>
+                    Start Conversation
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

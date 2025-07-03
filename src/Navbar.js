@@ -26,7 +26,7 @@ const Navbar = ({ email, setEmail, worker_email, setWorkerEmail }) => {
 
         // Fetch worker details if worker_email exists
         if (currentWorkerEmail) {
-          const workerResponse = await fetch(`http://localhost:8080/api/worker/${encodeURIComponent(currentWorkerEmail)}`);
+          const workerResponse = await fetch(`http://localhost:8080/api/maintenance-worker/${encodeURIComponent(currentWorkerEmail)}`);
           if (workerResponse.ok) {
             const workerData = await workerResponse.json();
             setWorker(workerData);
@@ -56,6 +56,34 @@ const Navbar = ({ email, setEmail, worker_email, setWorkerEmail }) => {
     email: currentEmail || currentWorkerEmail || ''
   };
 
+  // Navigation links based on user type
+  const getNavigationLinks = () => {
+    if (user.type === 'homeowner') {
+      return [
+        { path: "/main", icon: "fas fa-tachometer-alt", label: "Dashboard" },
+        { path: "/Approve", icon: "fas fa-clipboard-check", label: "Approve Requests" },
+        { path: "/chat", icon: "fas fa-comments", label: "Chat" },
+        { path : "/review-worker", icon: "fas fa-users", label: "Review Workers"},
+        // Add more homeowner-specific links here
+        // { path: "/manage-properties", icon: "fas fa-building", label: "Properties" },
+        // { path: "/payment-history", icon: "fas fa-credit-card", label: "Payments" },
+      ];
+    } else if (user.type === 'worker') {
+      return [
+        { path: "/worker-dashboard", icon: "fas fa-tachometer-alt", label: "Dashboard" },
+        { path: "/notifications", icon: "fas fa-bell", label: "Notifications" },
+        {path: "/chat", icon: "fas fa-comments", label: "Chat"},
+        // Add more worker-specific links here if needed
+        // { path: "/my-jobs", icon: "fas fa-briefcase", label: "My Jobs" },
+        // { path: "/schedule", icon: "fas fa-calendar", label: "Schedule" },
+      ];
+    } else {
+      return [
+        { path: "/main", icon: "fas fa-tachometer-alt", label: "Dashboard" },
+      ];
+    }
+  };
+
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to logout?")) {
       // Clear all user data
@@ -71,8 +99,12 @@ const Navbar = ({ email, setEmail, worker_email, setWorkerEmail }) => {
       setHomeowner(null);
       setWorker(null);
       
-      // Navigate to login
-      navigate("/login");
+      // Navigate to appropriate login page based on user type
+      if (user.type === 'worker') {
+        navigate("/Worker_login");
+      } else {
+        navigate("/login");
+      }
     }
   };
 
@@ -141,6 +173,9 @@ const Navbar = ({ email, setEmail, worker_email, setWorkerEmail }) => {
           margin-left: 8px;
           text-transform: uppercase;
         }
+        .user-type-badge.worker {
+          background-color: #007bff;
+        }
         .nav-links {
           display: flex;
           align-items: center;
@@ -180,6 +215,9 @@ const Navbar = ({ email, setEmail, worker_email, setWorkerEmail }) => {
           justify-content: center;
           font-weight: 600;
           font-size: 0.9rem;
+        }
+        .user-avatar.worker {
+          background-color: #007bff;
         }
         .user-details {
           display: flex;
@@ -282,7 +320,7 @@ const Navbar = ({ email, setEmail, worker_email, setWorkerEmail }) => {
             {user.type === 'worker' && currentWorkerEmail && (
               <span>
                 Worker: {currentWorkerEmail}
-                <span className="user-type-badge">Worker</span>
+                <span className="user-type-badge worker">Worker</span>
               </span>
             )}
             {user.type === 'guest' && (
@@ -292,22 +330,18 @@ const Navbar = ({ email, setEmail, worker_email, setWorkerEmail }) => {
         </div>
         
         <div className="nav-links">
-          <Link to="/main">
-            <i className="fas fa-tachometer-alt"></i>
-            Dashboard
-          </Link>
-          <Link to="/Approve">
-            <i className="fas fa-clipboard-check"></i>
-            Approve Requests
-          </Link>
-          <Link to="/chat">
-            <i className="fas fa-comments"></i>
-            Chat
-          </Link>
+          {getNavigationLinks().map((link, index) => (
+            <Link key={index} to={link.path}>
+              <i className={link.icon}></i>
+              {link.label}
+            </Link>
+          ))}
         </div>
         
         <div className="user-menu">
-          <div className="user-avatar">{user.initials}</div>
+          <div className={`user-avatar ${user.type === 'worker' ? 'worker' : ''}`}>
+            {user.initials}
+          </div>
           <div className="user-details">
             <div className="user-name">{user.name}</div>
             <div className="user-email">{user.email}</div>

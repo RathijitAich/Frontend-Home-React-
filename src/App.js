@@ -8,6 +8,7 @@ import LandingPage from "./LandingPage";
 import Registration from "./Registration";
 import MainPage from "./MainPage";
 import RequestMain from "./RequestMain";
+import ReviewWorker from './ReviewWorker';
 
 import Worker_regi from "./Worker_regi";
 import WorkerLogin from './Worker_login';
@@ -31,7 +32,8 @@ const ConditionalNavbar = ({ email, setEmail, worker_email, setWorkerEmail }) =>
     '/show-jobs',
     '/current-jobs',
     '/Approve',
-    '/chat'
+    '/chat',
+    '/review-worker'
   ];
   
   const shouldShowNavbar = navbarPaths.includes(location.pathname);
@@ -87,6 +89,7 @@ function App() {
 
             <Route path="/Approve" element={<Approve email={email} setEmail={setEmail} />} />
             <Route path ="/chat" element={<Chat email={email} worker_email={worker_email} />} />
+            <Route path="/review-worker" element={<ReviewWorker email={email} setEmail={setEmail} />} />
           </Routes>
         </div>
       </div>
