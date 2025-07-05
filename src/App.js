@@ -15,7 +15,9 @@ import WorkerLogin from './Worker_login';
 import WorkerDashboard from './WorkerDashboard';
 import ViewJobs from './ViewJobs';
 import CurrentJob from './CurrentJob';
-
+import Home from './pages/Home';
+import Electricity from './pages/Electricity';
+import Groceries from './pages/Groceries';
 import Approve from './Approve';
 
 import Chat from './Chat_experiment';
@@ -33,7 +35,10 @@ const ConditionalNavbar = ({ email, setEmail, worker_email, setWorkerEmail }) =>
     '/current-jobs',
     '/Approve',
     '/chat',
-    '/review-worker'
+    '/review-worker',
+    '/home',
+    '/electricity',
+    '/groceries'
   ];
   
   const shouldShowNavbar = navbarPaths.includes(location.pathname);
@@ -90,6 +95,10 @@ function App() {
             <Route path="/Approve" element={<Approve email={email} setEmail={setEmail} />} />
             <Route path ="/chat" element={<Chat email={email} worker_email={worker_email} />} />
             <Route path="/review-worker" element={<ReviewWorker email={email} setEmail={setEmail} />} />
+            
+            <Route path="/home" element={<Home />} />
+            <Route path="/electricity" element={<Electricity />} />
+            <Route path="/groceries" element={<Groceries />} />
           </Routes>
         </div>
       </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import PropTypes from 'prop-types';
+import Home from './pages/Home';
 
 
 const Dashboard = ({ email, setEmail , worker_email }) => {
@@ -347,9 +348,9 @@ const Dashboard = ({ email, setEmail , worker_email }) => {
               </div>
               <h2>Set Up Your Rooms</h2>
               <p>Create and customize rooms in your home. Track inventory, dimensions, and conditions.</p>
-              <a href="room-setup.html" className="feature-btn">
-                Manage Rooms <i className="fas fa-arrow-right"></i>
-              </a>
+            <Link to="/home" className="feature-btn">
+             Set Up Rooms <i className="fas fa-arrow-right"></i>
+            </Link>
             </div>
             {/* Maintenance Card */}
             <div className="feature-card">
