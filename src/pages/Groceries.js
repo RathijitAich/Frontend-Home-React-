@@ -7,6 +7,19 @@ const Groceries = () => {
   const [form, setForm] = useState({ name: '', quantity: '', unit: 'kg', price: '' });
   const navigate = useNavigate();
 
+  // Color constants
+  const colors = {
+    primary: '#8ecae6',
+    secondary: 'SkyBlue',
+    accent: 'White',
+    lightBg: '#f8f9fa',
+    white: '#ffffff',
+    danger: '#e63946',
+    gray: '#6c757d',
+    borderGray: '#ddd',
+    blue: '#8ecae6'
+  };
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -110,49 +123,264 @@ const Groceries = () => {
 
   const total = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
 
+  // Styles
+  const containerStyle = {
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    margin: 0,
+    padding: 0,
+    minHeight: '100vh'
+  };
+
+  const headerStyle = {
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    color: '#ffffff',
+    padding: '3rem 2rem',
+    textAlign: 'center',
+    position: 'relative',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+  };
+
+  const titleStyle = {
+    fontSize: '2.5rem',
+    fontWeight: '700',
+    margin: 0,
+    textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    color: '#ffffff'
+  };
+
+  const subtitleStyle = {
+    fontSize: '1.2rem',
+    opacity: 0.9,
+    marginTop: '0.5rem',
+    fontWeight: '400',
+    color: '#ffffff'
+  };
+
+  const mainContainerStyle = {
+    maxWidth: '1000px',
+    margin: '2rem auto',
+    padding: '1rem'
+  };
+
+  const backBtnStyle = {
+    background: 'rgba(255, 255, 255, 0.2)',
+    color: '#ffffff',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    fontWeight: '500',
+    marginBottom: '1.5rem'
+  };
+
+  const formSectionStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '1rem',
+    marginBottom: '2rem',
+    background: '#ffffff',
+    padding: '2.5rem',
+    borderRadius: '20px',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
+    border: '1px solid #e2e8f0'
+  };
+
+  const inputStyle = {
+    padding: '0.75rem',
+    fontSize: '1rem',
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    flex: 1,
+    minWidth: '120px',
+    transition: 'all 0.3s ease',
+    background: '#ffffff'
+  };
+
+  const addBtnStyle = {
+    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    color: '#ffffff',
+    border: 'none',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    fontWeight: '500',
+    fontSize: '0.9rem'
+  };
+
+  const tableSectionStyle = {
+    background: '#ffffff',
+    padding: '2.5rem',
+    borderRadius: '20px',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
+    border: '1px solid #e2e8f0'
+  };
+
+  const tableStyle = {
+    width: '100%',
+    borderCollapse: 'collapse',
+    backgroundColor: '#ffffff',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    color: '#1e293b'
+  };
+
+  const thStyle = {
+    padding: '0.75rem',
+    border: '1px solid #e2e8f0',
+    textAlign: 'center',
+    backgroundColor: '#f8fafc',
+    fontWeight: 'bold',
+    color: '#1e293b'
+  };
+
+  const tdStyle = {
+    padding: '0.75rem',
+    border: '1px solid #e2e8f0',
+    textAlign: 'center',
+    color: '#1e293b'
+  };
+
+  const tfootStyle = {
+    fontWeight: 'bold',
+    backgroundColor: '#f1f3f4',
+    color: '#1e293b'
+  };
+
+  const deleteBtnStyle = {
+    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+    color: '#ffffff',
+    border: 'none',
+    padding: '0.4rem 0.8rem',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    fontWeight: '500',
+    transition: 'all 0.3s ease'
+  };
+
+  const clearBtnStyle = {
+    background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+    color: '#ffffff',
+    border: 'none',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontWeight: '500',
+    marginTop: '1rem',
+    transition: 'all 0.3s ease'
+  };
+
+  const downloadBtnStyle = {
+    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+    color: '#ffffff',
+    border: 'none',
+    padding: '0.75rem 1.5rem',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontWeight: '500',
+    marginBottom: '1rem',
+    transition: 'all 0.3s ease'
+  };
+
+  const emptyMsgStyle = {
+    fontStyle: 'italic',
+    color: '#64748b',
+    textAlign: 'center',
+    padding: '2rem'
+  };
+
+  const footerStyle = {
+    background: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
+    color: '#ffffff',
+    textAlign: 'center',
+    padding: '1.5rem 0',
+    marginTop: '3rem',
+    borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+  };
+
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#f5f5f5' }}>
-      <header style={{ backgroundColor: '#2c3e50', color: 'white', padding: '2rem 0', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2.5rem', margin: 0 }}>Groceries Expense Tracker</h1>
-        <p style={{ fontSize: '1.2rem', marginTop: '0.5rem' }}>Monitor your grocery costs and stay within budget</p>
+    <div style={containerStyle}>
+      <header style={headerStyle}>
+        <h1 style={titleStyle}>Groceries Expense Tracker</h1>
+        <p style={subtitleStyle}>Monitor your grocery costs and stay within budget</p>
       </header>
 
-      <main style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1rem' }}>
+      <main style={mainContainerStyle}>
         <button 
-          onClick={() => navigate('/')}
-          style={{
-            backgroundColor: '#34495e', color: 'white', border: 'none', padding: '0.75rem 1.5rem',
-            borderRadius: '5px', cursor: 'pointer', marginBottom: '2rem', fontSize: '1rem'
-          }}
-          onMouseOver={(e) => e.target.style.backgroundColor = '#2c3e50'}
-          onMouseOut={(e) => e.target.style.backgroundColor = '#34495e'}
+          onClick={() => navigate('/home')}
+          style={backBtnStyle}
+          onMouseOver={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+          onMouseOut={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
         >
           ← Back to Home
         </button>
 
-        <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', marginBottom: '2rem' }}>
-          <h2 style={{ marginBottom: '1.5rem', color: '#2c3e50' }}>Add New Item</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-            <input name="name" placeholder="Item Name" value={form.name} onChange={handleChange} style={inputStyle} />
-            <input name="quantity" type="number" min="0.1" step="0.1" placeholder="Quantity" value={form.quantity} onChange={handleChange} style={inputStyle} />
-            <select name="unit" value={form.unit} onChange={handleChange} style={inputStyle}>
-              <option value="kg">kg</option>
-              <option value="liter">liter</option>
-              <option value="piece">piece</option>
-              <option value="packet">packet</option>
-            </select>
-            <input name="price" type="number" min="0.1" step="0.01" placeholder="Price (Taka)" value={form.price} onChange={handleChange} style={inputStyle} />
-            <button onClick={handleAdd} style={addButtonStyle} onMouseOver={(e) => e.target.style.backgroundColor = '#219a52'} onMouseOut={(e) => e.target.style.backgroundColor = '#27ae60'}>
-              Add Item
-            </button>
-          </div>
+        <div style={formSectionStyle}>
+          <h2 style={{ marginBottom: '1rem', color: '#1e293b', width: '100%' }}>Add New Item</h2>
+          <input 
+            name="name" 
+            placeholder="Item Name" 
+            value={form.name} 
+            onChange={handleChange} 
+            style={inputStyle} 
+          />
+          <input 
+            name="quantity" 
+            type="number" 
+            min="0.1" 
+            step="0.1" 
+            placeholder="Quantity" 
+            value={form.quantity} 
+            onChange={handleChange} 
+            style={inputStyle} 
+          />
+          <select 
+            name="unit" 
+            value={form.unit} 
+            onChange={handleChange} 
+            style={inputStyle}
+          >
+            <option value="kg">kg</option>
+            <option value="liter">liter</option>
+            <option value="piece">piece</option>
+            <option value="packet">packet</option>
+          </select>
+          <input 
+            name="price" 
+            type="number" 
+            min="0.1" 
+            step="0.01" 
+            placeholder="Price (Taka)" 
+            value={form.price} 
+            onChange={handleChange} 
+            style={inputStyle} 
+          />
+          <button 
+            onClick={handleAdd} 
+            style={addBtnStyle}
+            onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+            onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+          >
+            Add Item
+          </button>
         </div>
 
-        <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-            <h2 style={{ color: '#2c3e50' }}>Items List</h2>
+        <div style={tableSectionStyle}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h2 style={{ color: '#1e293b', margin: 0 }}>Items List</h2>
             {items.length > 0 && (
-              <button onClick={downloadPDF} style={downloadButtonStyle} onMouseOver={(e) => e.target.style.backgroundColor = '#2980b9'} onMouseOut={(e) => e.target.style.backgroundColor = '#3498db'}>
+              <button 
+                onClick={downloadPDF} 
+                style={downloadBtnStyle}
+                onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+                onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+              >
                 📄 Download PDF
               </button>
             )}
@@ -161,9 +389,9 @@ const Groceries = () => {
           {items.length > 0 ? (
             <>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                <table style={tableStyle}>
                   <thead>
-                    <tr style={{ backgroundColor: '#f8f9fa' }}>
+                    <tr>
                       <th style={thStyle}>Item</th>
                       <th style={thStyle}>Quantity</th>
                       <th style={thStyle}>Unit</th>
@@ -175,74 +403,58 @@ const Groceries = () => {
                   <tbody>
                     {items.map((item, idx) => (
                       <tr key={idx}>
-                        <td style={tdStyleBold}>{item.name}</td>
+                        <td style={{ ...tdStyle, fontWeight: 'bold' }}>{item.name}</td>
                         <td style={tdStyle}>{item.quantity}</td>
                         <td style={tdStyle}>{item.unit}</td>
                         <td style={tdStyle}>{item.price.toFixed(2)}</td>
-                        <td style={tdStyleBold}>{(item.quantity * item.price).toFixed(2)}</td>
+                        <td style={{ ...tdStyle, fontWeight: 'bold' }}>{(item.quantity * item.price).toFixed(2)}</td>
                         <td style={tdStyle}>
-                          <button onClick={() => handleDelete(idx)} style={deleteButtonStyle}>Delete</button>
+                          <button 
+                            onClick={() => handleDelete(idx)} 
+                            style={deleteBtnStyle}
+                            onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+                            onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+                          >
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr style={{ backgroundColor: '#f8f9fa', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                    <tr style={tfootStyle}>
                       <td colSpan="4" style={tdStyle}>Total Amount:</td>
-                      <td style={{ ...tdStyle, color: '#27ae60' }}>{total.toFixed(2)} Taka</td>
+                      <td style={{ ...tdStyle, color: colors.primary, fontWeight: 'bold' }}>{total.toFixed(2)} Taka</td>
                       <td style={tdStyle}></td>
                     </tr>
                   </tfoot>
                 </table>
               </div>
 
-              <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-                <button onClick={clearAll} style={clearButtonStyle}>Clear All Items</button>
+              <div style={{ textAlign: 'center' }}>
+                <button 
+                  onClick={clearAll} 
+                  style={clearBtnStyle}
+                  onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+                  onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+                >
+                  Clear All Items
+                </button>
               </div>
             </>
           ) : (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#6c757d', fontSize: '1.2rem' }}>
+            <div style={emptyMsgStyle}>
               <p>No items added yet. Start by adding your first grocery item!</p>
             </div>
           )}
         </div>
       </main>
 
-      <footer style={{ backgroundColor: '#2c3e50', color: 'white', textAlign: 'center', padding: '2rem 0', marginTop: '3rem' }}>
+      <footer style={footerStyle}>
         <p style={{ margin: 0 }}>© 2025 Expense Tracker | All Rights Reserved</p>
       </footer>
     </div>
   );
-};
-
-//  Style Constants
-const inputStyle = {
-  padding: '0.75rem', border: '2px solid #ddd', borderRadius: '5px', fontSize: '1rem'
-};
-const addButtonStyle = {
-  backgroundColor: '#27ae60', color: 'white', border: 'none', padding: '0.75rem 1.5rem',
-  borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold'
-};
-const downloadButtonStyle = {
-  backgroundColor: '#3498db', color: 'white', border: 'none', padding: '0.75rem 1.5rem',
-  borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold'
-};
-const deleteButtonStyle = {
-  backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '0.5rem 1rem',
-  borderRadius: '5px', cursor: 'pointer'
-};
-const clearButtonStyle = {
-  backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '0.75rem 2rem',
-  borderRadius: '5px', cursor: 'pointer', fontSize: '1rem', fontWeight: 'bold'
-};
-const thStyle = {
-  padding: '1rem', textAlign: 'left', borderBottom: '2px solid #dee2e6'
-};
-const tdStyle = {
-  padding: '1rem', borderBottom: '1px solid #dee2e6'
-};
-const tdStyleBold = {
-  ...tdStyle, fontWeight: 'bold'
 };
 
 export default Groceries;
