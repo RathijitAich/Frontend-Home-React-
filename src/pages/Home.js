@@ -22,6 +22,12 @@ const Home = () => {
       title: 'Groceries Expense Tracker',
       description: 'Keep track of your grocery expenses and monitor your spending habits over time.',
       path: '/groceries'
+    },
+    {
+      icon: '🔔',
+      title: 'Smart Bill Reminders',
+      description: 'Get reminders for bill due dates, budget alerts, and device maintenance schedules.',
+      path: '/bill-reminders'
     }
   ];
 
@@ -159,6 +165,10 @@ const Home = () => {
 
         .tool-card:nth-child(3) {
           animation-delay: 0.8s;
+        }
+
+        .tool-card:nth-child(4) {
+          animation-delay: 1.0s;
         }
 
         .tool-card::before {
