@@ -1,50 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import PropTypes from "prop-types";
 
-const RoomSetup = () => {
+const RoomSetup = ({email, setEmail}) => {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
+  const [loadedRooms, setLoadedRooms] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load rooms from localStorage and backend on component mount
+  // Load from database on component mount
   useEffect(() => {
-    const loadRoomSetup = async () => {
-      // First try to load from localStorage
-      const savedRooms = localStorage.getItem('homeRooms');
-      if (savedRooms) {
-        setRooms(JSON.parse(savedRooms));
-      }
-
-      // Then try to load from backend
-      const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('email');
-      if (userEmail) {
-        try {
-          const response = await fetch(`http://localhost:5000/api/room-setup/${encodeURIComponent(userEmail)}`);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.rooms && data.rooms.length > 0) {
-              // Convert backend data format to frontend format
-              const loadedRooms = data.rooms.map((room, index) => ({
-                id: Date.now() + index,
-                name: room.name,
-                devices: room.devices.map((device, deviceIndex) => ({
-                  id: Date.now() + index * 1000 + deviceIndex,
-                  name: device.name,
-                  watts: device.watts.toString(),
-                  hours: device.hours.toString(),
-                  quantity: device.quantity
-                }))
-              }));
-              setRooms(loadedRooms);
-            }
-          }
-        } catch (error) {
-          console.error('Error loading room setup from backend:', error);
-          // Continue with localStorage data if backend fails
-        }
-      }
-    };
-
-    loadRoomSetup();
+    loadFromDatabase();
   }, []);
 
   // Save rooms to localStorage whenever rooms state changes
@@ -53,11 +19,14 @@ const RoomSetup = () => {
   }, [rooms]);
 
   const addRoom = () => {
-    setRooms([...rooms, {
+    const newRoom = {
       id: Date.now(),
       name: '',
-      devices: [{ id: Date.now() + 1, name: '', watts: '', hours: '', quantity: 1 }]
-    }]);
+      devices: [],
+      isNew: true,
+      isSaved: false
+    };
+    setRooms([...rooms, newRoom]);
   };
 
   const updateRoom = (index, field, value) => {
@@ -73,7 +42,8 @@ const RoomSetup = () => {
       name: '',
       watts: '',
       hours: '',
-      quantity: 1
+      quantity: 1,
+      isNew: true
     });
     setRooms(updated);
   };
@@ -90,7 +60,33 @@ const RoomSetup = () => {
     setRooms(updated);
   };
 
-  const removeRoom = (index) => {
+  const removeRoom = async (index) => {
+    const room = rooms[index];
+    
+    // If room is saved in database, delete from backend
+    if (room.isSaved) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/room-setup/room/${encodeURIComponent(room.name)}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to delete room');
+        }
+
+        alert('Room and associated devices deleted successfully from database!');
+      } catch (error) {
+        console.error('Error deleting room:', error);
+        alert(`Failed to delete room: ${error.message}`);
+        return; // Don't remove from frontend if backend deletion failed
+      }
+    }
+
+    // Remove from frontend
     const updated = [...rooms];
     updated.splice(index, 1);
     setRooms(updated);
@@ -98,137 +94,205 @@ const RoomSetup = () => {
 
   const reset = () => {
     setRooms([]);
+    setLoadedRooms([]);
     localStorage.removeItem('homeRooms');
   };
 
-  const saveSetup = async () => {
+  const saveRoom = async (roomIndex) => {
     try {
-      // Get the logged-in user's email from localStorage or props
       const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('email');
       
       if (!userEmail) {
-        alert('Please log in to save your room setup.');
+        alert('Please log in to save room.');
         return;
       }
 
-      if (rooms.length === 0) {
-        alert('Please add at least one room before saving.');
+      const room = rooms[roomIndex];
+      
+      if (!room.name.trim()) {
+        alert('Please enter a room name.');
         return;
       }
 
-      // Validate that all rooms have names and at least one device
-      const invalidRooms = rooms.filter(room => 
-        !room.name.trim() || 
-        room.devices.length === 0 || 
-        room.devices.some(device => !device.name.trim() || !device.watts || !device.hours)
-      );
-
-      if (invalidRooms.length > 0) {
-        alert('Please ensure all rooms have names and all devices have complete information (name, watts, and hours).');
-        return;
-      }
-
-      const setupData = {
-        userEmail: userEmail,
-        rooms: rooms.map(room => ({
-          name: room.name,
-          devices: room.devices.map(device => ({
-            name: device.name,
-            watts: parseFloat(device.watts),
-            hours: parseFloat(device.hours),
-            quantity: parseInt(device.quantity) || 1
-          }))
-        }))
+      const roomData = {
+        roomName: room.name,
+        homeowner: {
+          email: userEmail
+        }
       };
 
-      const response = await fetch('http://localhost:5000/api/room-setup', {
+      const response = await fetch('http://localhost:8080/api/room-setup/room', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(setupData)
+        body: JSON.stringify(roomData)
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        alert('Room setup saved successfully!');
-      } else {
+      if (!response.ok) {
         const error = await response.json();
-        alert(`Failed to save setup: ${error.message || 'Unknown error'}`);
+        throw new Error(error.message || 'Failed to save room');
       }
+
+      // Mark room as saved
+      const updated = [...rooms];
+      updated[roomIndex].isSaved = true;
+      updated[roomIndex].isNew = false;
+      setRooms(updated);
+
+      alert('Room saved successfully!');
     } catch (error) {
-      console.error('Error saving room setup:', error);
-      alert('Failed to save room setup. Please check your connection and try again.');
+      console.error('Error saving room:', error);
+      alert(`Failed to save room: ${error.message}`);
+    }
+  };
+
+  const saveNewDevices = async (roomIndex) => {
+    try {
+      const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('email');
+      
+      if (!userEmail) {
+        alert('Please log in to save devices.');
+        return;
+      }
+
+      const room = rooms[roomIndex];
+      const newDevices = room.devices.filter(device => device.isNew);
+
+      if (newDevices.length === 0) {
+        alert('No new devices to save.');
+        return;
+      }
+
+      // Validate devices
+      const invalidDevices = newDevices.filter(device => 
+        !device.name.trim() || !device.watts || !device.hours
+      );
+
+      if (invalidDevices.length > 0) {
+        alert('Please complete all device information before saving.');
+        return;
+      }
+
+      const deviceData = newDevices.map(device => ({
+        deviceName: device.name,
+        watts: parseFloat(device.watts),
+        hoursPerDay: parseFloat(device.hours),
+        quantity: parseInt(device.quantity) || 1,
+        room: {
+          roomName: room.name
+        }
+      }));
+
+      const response = await fetch('http://localhost:8080/api/room-setup/devices', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(deviceData)
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to save devices');
+      }
+
+      // Mark devices as saved
+      const updated = [...rooms];
+      updated[roomIndex].devices.forEach(device => {
+        if (device.isNew) {
+          device.isNew = false;
+          device.isSaved = true;
+        }
+      });
+      setRooms(updated);
+
+      alert('Devices saved successfully!');
+    } catch (error) {
+      console.error('Error saving devices:', error);
+      alert(`Failed to save devices: ${error.message}`);
     }
   };
 
   const loadFromDatabase = async () => {
     try {
+      setIsLoading(true);
       const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('email');
       
       if (!userEmail) {
-        alert('Please log in to load your room setup.');
+        setIsLoading(false);
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/room-setup/${encodeURIComponent(userEmail)}`);
+      const response = await fetch(`http://localhost:8080/api/room-setup/setup/${encodeURIComponent(userEmail)}`);
       
-      if (response.ok) {
-        const data = await response.json();
-        if (data.rooms && data.rooms.length > 0) {
-          // Convert backend data format to frontend format
-          const loadedRooms = data.rooms.map((room, index) => ({
-            id: Date.now() + index,
-            name: room.name,
-            devices: room.devices.map((device, deviceIndex) => ({
-              id: Date.now() + index * 1000 + deviceIndex,
-              name: device.name,
-              watts: device.watts.toString(),
-              hours: device.hours.toString(),
-              quantity: device.quantity
-            }))
-          }));
-          setRooms(loadedRooms);
-          alert('Room setup loaded successfully from database!');
-        } else {
-          alert('No saved room setup found in database.');
+      if (!response.ok) {
+        if (response.status === 404) {
+          setIsLoading(false);
+          return;
         }
-      } else {
-        const error = await response.json();
-        alert(`Failed to load setup: ${error.message || 'Unknown error'}`);
+        throw new Error('Failed to load room setup');
       }
+
+      const data = await response.json();
+      
+      if (!data.rooms || data.rooms.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Transform the data to match frontend structure
+      const loadedRooms = data.rooms.map((roomData, index) => ({
+        id: Date.now() + index,
+        name: roomData.room.roomName,
+        devices: roomData.devices.map((device, deviceIndex) => ({
+          id: Date.now() + index * 1000 + deviceIndex,
+          name: device.deviceName,
+          watts: device.watts.toString(),
+          hours: device.hoursPerDay.toString(),
+          quantity: device.quantity,
+          isNew: false,
+          isSaved: true
+        })),
+        isNew: false,
+        isSaved: true
+      }));
+
+      setRooms(loadedRooms);
+      setLoadedRooms(loadedRooms);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error loading room setup:', error);
-      alert('Failed to load room setup. Please check your connection and try again.');
+      setIsLoading(false);
     }
   };
 
-  // Inline styles
+  // Professional color scheme and styles
   const styles = {
     roomSetupPage: {
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif",
+      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       margin: 0,
       padding: 0,
+      color: '#1e293b',
     },
     roomSetupHeader: {
-      background: 'rgba(255, 255, 255, 0.1)',
-      backdropFilter: 'blur(10px)',
+      background: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)',
       color: '#ffffff',
-      padding: '3rem 2rem',
+      padding: '2rem',
       textAlign: 'center',
       position: 'relative',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
     },
     title: {
-      fontSize: '2.5rem',
-      fontWeight: '700',
+      fontSize: '2.25rem',
+      fontWeight: '600',
       margin: 0,
-      textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      letterSpacing: '-0.025em',
     },
     subtitle: {
-      fontSize: '1.2rem',
+      fontSize: '1.125rem',
       margin: '0.5rem 0 0 0',
       opacity: 0.9,
       fontWeight: '400',
@@ -237,59 +301,50 @@ const RoomSetup = () => {
       position: 'absolute',
       top: '2rem',
       left: '2rem',
-      background: 'rgba(255, 255, 255, 0.2)',
+      background: 'rgba(255, 255, 255, 0.15)',
       color: '#ffffff',
       border: '1px solid rgba(255, 255, 255, 0.3)',
       padding: '0.75rem 1.5rem',
-      borderRadius: '12px',
+      borderRadius: '8px',
       fontWeight: '500',
-      transition: 'all 0.3s ease',
+      transition: 'all 0.2s ease',
       cursor: 'pointer',
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-    },
-    calculateBtn: {
-      position: 'absolute',
-      top: '2rem',
-      right: '2rem',
-      background: 'rgba(34, 197, 94, 0.9)',
-      color: '#ffffff',
-      border: '1px solid rgba(255, 255, 255, 0.3)',
-      padding: '0.75rem 1.5rem',
-      borderRadius: '12px',
-      fontWeight: '500',
-      transition: 'all 0.3s ease',
-      cursor: 'pointer',
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '0.5rem',
+      fontSize: '0.9rem',
+      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
     },
     container: {
-      maxWidth: '1200px',
+      maxWidth: '1400px',
       margin: '0 auto',
       padding: '2rem',
     },
     setupContainer: {
       background: '#ffffff',
-      borderRadius: '20px',
-      padding: '2.5rem',
-      boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
-      border: '1px solid #e2e8f0',
+      borderRadius: '12px',
+      padding: '2rem',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      border: '1px solid #e5e7eb',
     },
     sectionTitle: {
       fontSize: '1.5rem',
       fontWeight: '600',
-      marginBottom: '2rem',
+      marginBottom: '1.5rem',
       color: '#1e293b',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
     },
     roomContainer: {
       marginBottom: '2rem',
-      border: '1px solid #e2e8f0',
+      border: '1px solid #d1d5db',
       padding: '1.5rem',
-      borderRadius: '16px',
-      background: '#f8fafc',
-      transition: 'all 0.3s ease',
+      borderRadius: '12px',
+      background: '#fafafa',
+      transition: 'all 0.2s ease',
+    },
+    savedRoomContainer: {
+      backgroundColor: '#f0f9ff',
+      border: '1px solid #0ea5e9',
+      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
     },
     roomHeader: {
       display: 'flex',
@@ -298,61 +353,124 @@ const RoomSetup = () => {
       marginBottom: '1.5rem',
       gap: '1rem',
     },
+    roomHeaderLabel: {
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      color: '#374151',
+      marginBottom: '0.5rem',
+    },
     roomHeaderInput: {
       flex: 1,
-      fontSize: '1.1rem',
+      fontSize: '1rem',
       fontWeight: '500',
-      border: '1px solid #e2e8f0',
+      border: '1px solid #d1d5db',
       borderRadius: '8px',
       padding: '0.75rem',
-      transition: 'all 0.3s ease',
+      transition: 'all 0.2s ease',
       background: '#ffffff',
     },
-    deviceItem: {
-      display: 'grid',
-      gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
-      gap: '1rem',
+    disabledInput: {
+      backgroundColor: '#f3f4f6',
+      cursor: 'not-allowed',
+      color: '#6b7280',
+    },
+    deviceSectionTitle: {
+      fontSize: '1rem',
+      fontWeight: '600',
       marginBottom: '1rem',
-      padding: '1rem',
-      background: '#ffffff',
-      borderRadius: '12px',
-      border: '1px solid #e2e8f0',
-      transition: 'all 0.3s ease',
+      color: '#374151',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+    },
+    savedDevicesContainer: {
+      border: '1px solid #10b981',
+      backgroundColor: '#f0fdf4',
+      padding: '1.5rem',
+      borderRadius: '8px',
+      marginBottom: '1rem',
+    },
+    newDevicesContainer: {
+      border: '1px solid #3b82f6',
+      backgroundColor: '#eff6ff',
+      padding: '1.5rem',
+      borderRadius: '8px',
+      marginBottom: '1rem',
+    },
+    deviceTable: {
+      width: '100%',
+      borderCollapse: 'collapse',
+      marginBottom: '1rem',
+    },
+    deviceTableHeader: {
+      backgroundColor: '#f8fafc',
+      borderBottom: '2px solid #e5e7eb',
+    },
+    deviceTableHeaderCell: {
+      padding: '0.75rem',
+      textAlign: 'left',
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      color: '#374151',
+      border: '1px solid #e5e7eb',
+    },
+    deviceTableRow: {
+      borderBottom: '1px solid #e5e7eb',
+    },
+    deviceTableCell: {
+      padding: '0.75rem',
+      border: '1px solid #e5e7eb',
     },
     deviceInput: {
-      border: '1px solid #e2e8f0',
-      borderRadius: '8px',
-      padding: '0.75rem',
-      fontSize: '0.9rem',
-      transition: 'all 0.3s ease',
+      width: '100%',
+      border: '1px solid #d1d5db',
+      borderRadius: '6px',
+      padding: '0.5rem',
+      fontSize: '0.875rem',
+      transition: 'all 0.2s ease',
       background: '#ffffff',
     },
     btn: {
-      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+      background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
       color: '#ffffff',
       padding: '0.75rem 1.5rem',
       border: 'none',
-      borderRadius: '12px',
+      borderRadius: '8px',
       cursor: 'pointer',
       fontWeight: '500',
-      fontSize: '0.9rem',
-      transition: 'all 0.3s ease',
-      position: 'relative',
-      overflow: 'hidden',
+      fontSize: '0.875rem',
+      transition: 'all 0.2s ease',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)',
     },
     btnDanger: {
-      background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+      background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
       color: '#ffffff',
       padding: '0.75rem 1.5rem',
       border: 'none',
-      borderRadius: '12px',
+      borderRadius: '8px',
       cursor: 'pointer',
       fontWeight: '500',
-      fontSize: '0.9rem',
-      transition: 'all 0.3s ease',
+      fontSize: '0.875rem',
+      transition: 'all 0.2s ease',
+      boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)',
+    },
+    btnSuccess: {
+      background: 'linear-gradient(135deg, #059669, #047857)',
+      color: '#ffffff',
+      padding: '0.75rem 1.5rem',
+      border: 'none',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      fontWeight: '500',
+      fontSize: '0.875rem',
+      transition: 'all 0.2s ease',
+      boxShadow: '0 2px 4px rgba(5, 150, 105, 0.2)',
     },
     btnSmall: {
-      fontSize: '0.85rem',
+      fontSize: '0.75rem',
       padding: '0.5rem 1rem',
     },
     actions: {
@@ -364,45 +482,61 @@ const RoomSetup = () => {
     actionBtn: {
       flex: 1,
       minWidth: '150px',
-      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+      background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
       color: '#ffffff',
       padding: '0.75rem 1.5rem',
       border: 'none',
-      borderRadius: '12px',
+      borderRadius: '8px',
       cursor: 'pointer',
       fontWeight: '500',
-      fontSize: '0.9rem',
-      transition: 'all 0.3s ease',
+      fontSize: '0.875rem',
+      transition: 'all 0.2s ease',
+      boxShadow: '0 2px 4px rgba(37, 99, 235, 0.2)',
     },
     actionBtnDanger: {
       flex: 1,
       minWidth: '150px',
-      background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+      background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
       color: '#ffffff',
       padding: '0.75rem 1.5rem',
       border: 'none',
-      borderRadius: '12px',
+      borderRadius: '8px',
       cursor: 'pointer',
       fontWeight: '500',
-      fontSize: '0.9rem',
-      transition: 'all 0.3s ease',
+      fontSize: '0.875rem',
+      transition: 'all 0.2s ease',
+      boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)',
+    },
+    actionBtnSuccess: {
+      flex: 1,
+      minWidth: '150px',
+      background: 'linear-gradient(135deg, #059669, #047857)',
+      color: '#ffffff',
+      padding: '0.75rem 1.5rem',
+      border: 'none',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      fontWeight: '500',
+      fontSize: '0.875rem',
+      transition: 'all 0.2s ease',
+      boxShadow: '0 2px 4px rgba(5, 150, 105, 0.2)',
     },
     summaryContainer: {
       marginTop: '2rem',
       padding: '1.5rem',
-      background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.1))',
-      border: '2px solid #22c55e',
-      borderRadius: '16px',
+      background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+      border: '1px solid #0ea5e9',
+      borderRadius: '12px',
     },
     summaryTitle: {
-      fontSize: '1.2rem',
+      fontSize: '1.25rem',
       fontWeight: '600',
       color: '#1e293b',
       marginBottom: '1rem',
     },
     summaryStats: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
       gap: '1rem',
     },
     statItem: {
@@ -410,17 +544,27 @@ const RoomSetup = () => {
       padding: '1rem',
       background: '#ffffff',
       borderRadius: '8px',
-      border: '1px solid #e2e8f0',
+      border: '1px solid #e5e7eb',
+      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
     },
     statValue: {
       fontSize: '1.5rem',
       fontWeight: '700',
-      color: '#22c55e',
+      color: '#1e40af',
       margin: '0.5rem 0',
     },
     statLabel: {
-      fontSize: '0.9rem',
-      color: '#64748b',
+      fontSize: '0.875rem',
+      color: '#6b7280',
+      fontWeight: '500',
+    },
+    loadingContainer: {
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '2rem',
+      fontSize: '1rem',
+      color: '#6b7280',
     },
   };
 
@@ -438,154 +582,254 @@ const RoomSetup = () => {
     }, 0);
   };
 
+  if (isLoading) {
+    return (
+      <div style={styles.roomSetupPage}>
+        <header style={styles.roomSetupHeader}>
+          <h1 style={styles.title}>Room & Device Setup</h1>
+          <p style={styles.subtitle}>Loading your room configuration...</p>
+        </header>
+        <main style={styles.container}>
+          <div style={styles.setupContainer}>
+            <div style={styles.loadingContainer}>
+              <div>Loading room setup from database...</div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.roomSetupPage}>
       <header style={styles.roomSetupHeader}>
-        <h1 style={styles.title}>Room & Device Setup</h1>
+        <h1 style={styles.title}>🏠 Room & Device Setup</h1>
         <p style={styles.subtitle}>Configure your rooms and electrical devices for accurate cost calculations</p>
         <button 
           onClick={() => navigate('/home')} 
           style={styles.backBtn}
-          onMouseOver={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
-          onMouseOut={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+          onMouseOver={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.25)'}
+          onMouseOut={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.15)'}
         >
           ← Back to Home
-        </button>
-        <button 
-          onClick={() => navigate('/electricity')} 
-          style={styles.calculateBtn}
-          onMouseOver={(e) => e.target.style.background = 'rgba(34, 197, 94, 1)'}
-          onMouseOut={(e) => e.target.style.background = 'rgba(34, 197, 94, 0.9)'}
-        >
-          Calculate Bills →
         </button>
       </header>
 
       <main style={styles.container}>
         <div style={styles.setupContainer}>
-          <h2 style={styles.sectionTitle}>Add Rooms and Devices</h2>
+          <h2 style={styles.sectionTitle}>
+            <span>📋</span> Room & Device Management
+          </h2>
 
           {rooms.map((room, roomIndex) => (
-            <div style={styles.roomContainer} key={room.id}>
+            <div 
+              style={{
+                ...styles.roomContainer,
+                ...(room.isSaved ? styles.savedRoomContainer : {})
+              }} 
+              key={room.id}
+            >
               <div style={styles.roomHeader}>
-                <input
-                  type="text"
-                  placeholder="Room Name (e.g., Living Room, Kitchen)"
-                  value={room.name}
-                  onChange={(e) => updateRoom(roomIndex, 'name', e.target.value)}
-                  style={styles.roomHeaderInput}
-                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                />
-                <button 
-                  style={{...styles.btnDanger, ...styles.btnSmall}} 
-                  onClick={() => removeRoom(roomIndex)}
-                  onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                  onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-                >
-                  Remove Room
-                </button>
-              </div>
-
-              {room.devices.map((device, deviceIndex) => (
-                <div style={styles.deviceItem} key={device.id}>
+                <div style={{ flex: 1 }}>
+                  <div style={styles.roomHeaderLabel}>Room Name</div>
                   <input
                     type="text"
-                    placeholder="Device Name (e.g., LED Bulb, AC, Fan)"
-                    value={device.name}
-                    onChange={(e) => updateDevice(roomIndex, deviceIndex, 'name', e.target.value)}
-                    style={styles.deviceInput}
-                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                    placeholder="Enter room name (e.g., Living Room, Kitchen)"
+                    value={room.name}
+                    onChange={(e) => updateRoom(roomIndex, 'name', e.target.value)}
+                    style={{
+                      ...styles.roomHeaderInput,
+                      ...(room.isSaved ? styles.disabledInput : {})
+                    }}
+                    disabled={room.isSaved}
                   />
-                  <input
-                    type="number"
-                    placeholder="Watts"
-                    value={device.watts}
-                    onChange={(e) => updateDevice(roomIndex, deviceIndex, 'watts', e.target.value)}
-                    style={styles.deviceInput}
-                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Hours/Day"
-                    value={device.hours}
-                    onChange={(e) => updateDevice(roomIndex, deviceIndex, 'hours', e.target.value)}
-                    style={styles.deviceInput}
-                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Quantity"
-                    value={device.quantity}
-                    onChange={(e) => updateDevice(roomIndex, deviceIndex, 'quantity', e.target.value)}
-                    style={styles.deviceInput}
-                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                  />
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+                  {room.isNew && !room.isSaved && (
+                    <button 
+                      style={{...styles.btnSuccess, ...styles.btnSmall}} 
+                      onClick={() => saveRoom(roomIndex)}
+                      onMouseOver={(e) => e.target.style.transform = 'translateY(-1px)'}
+                      onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+                    >
+                      💾 Save Room
+                    </button>
+                  )}
                   <button 
                     style={{...styles.btnDanger, ...styles.btnSmall}} 
-                    onClick={() => removeDevice(roomIndex, deviceIndex)}
-                    onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+                    onClick={() => removeRoom(roomIndex)}
+                    onMouseOver={(e) => e.target.style.transform = 'translateY(-1px)'}
                     onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
                   >
-                    ✕
+                    🗑️ Remove
                   </button>
                 </div>
-              ))}
+              </div>
 
-              <button 
-                style={{...styles.btn, ...styles.btnSmall}} 
-                onClick={() => addDevice(roomIndex)}
-                onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-              >
-                Add Device
-              </button>
+              {/* Saved Devices Section */}
+              {room.devices.filter(device => !device.isNew).length > 0 && (
+                <div style={styles.savedDevicesContainer}>
+                  <h4 style={styles.deviceSectionTitle}>
+                    <span>✅</span> Saved Devices
+                  </h4>
+                  <table style={styles.deviceTable}>
+                    <thead style={styles.deviceTableHeader}>
+                      <tr>
+                        <th style={styles.deviceTableHeaderCell}>Device Name</th>
+                        <th style={styles.deviceTableHeaderCell}>Power (Watts)</th>
+                        <th style={styles.deviceTableHeaderCell}>Usage (Hours/Day)</th>
+                        <th style={styles.deviceTableHeaderCell}>Quantity</th>
+                        <th style={styles.deviceTableHeaderCell}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {room.devices.filter(device => !device.isNew).map((device, deviceIndex) => (
+                        <tr style={styles.deviceTableRow} key={device.id}>
+                          <td style={styles.deviceTableCell}>
+                            <strong>{device.name}</strong>
+                          </td>
+                          <td style={styles.deviceTableCell}>{device.watts}W</td>
+                          <td style={styles.deviceTableCell}>{device.hours} hrs</td>
+                          <td style={styles.deviceTableCell}>{device.quantity}</td>
+                          <td style={styles.deviceTableCell}>
+                            <span style={{ color: '#10b981', fontWeight: '500' }}>✓ Saved</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* New Devices Section */}
+              {room.devices.filter(device => device.isNew).length > 0 && (
+                <div style={styles.newDevicesContainer}>
+                  <h4 style={styles.deviceSectionTitle}>
+                    <span>➕</span> New Devices
+                  </h4>
+                  <table style={styles.deviceTable}>
+                    <thead style={styles.deviceTableHeader}>
+                      <tr>
+                        <th style={styles.deviceTableHeaderCell}>Device Name</th>
+                        <th style={styles.deviceTableHeaderCell}>Power (Watts)</th>
+                        <th style={styles.deviceTableHeaderCell}>Usage (Hours/Day)</th>
+                        <th style={styles.deviceTableHeaderCell}>Quantity</th>
+                        <th style={styles.deviceTableHeaderCell}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {room.devices.filter(device => device.isNew).map((device, deviceIndex) => {
+                        const actualIndex = room.devices.findIndex(d => d.id === device.id);
+                        return (
+                          <tr style={styles.deviceTableRow} key={device.id}>
+                            <td style={styles.deviceTableCell}>
+                              <input
+                                type="text"
+                                placeholder="e.g., LED Bulb, AC, Fan"
+                                value={device.name}
+                                onChange={(e) => updateDevice(roomIndex, actualIndex, 'name', e.target.value)}
+                                style={styles.deviceInput}
+                              />
+                            </td>
+                            <td style={styles.deviceTableCell}>
+                              <input
+                                type="number"
+                                placeholder="60"
+                                value={device.watts}
+                                onChange={(e) => updateDevice(roomIndex, actualIndex, 'watts', e.target.value)}
+                                style={styles.deviceInput}
+                              />
+                            </td>
+                            <td style={styles.deviceTableCell}>
+                              <input
+                                type="number"
+                                placeholder="8"
+                                value={device.hours}
+                                onChange={(e) => updateDevice(roomIndex, actualIndex, 'hours', e.target.value)}
+                                style={styles.deviceInput}
+                              />
+                            </td>
+                            <td style={styles.deviceTableCell}>
+                              <input
+                                type="number"
+                                placeholder="1"
+                                value={device.quantity}
+                                onChange={(e) => updateDevice(roomIndex, actualIndex, 'quantity', e.target.value)}
+                                style={styles.deviceInput}
+                              />
+                            </td>
+                            <td style={styles.deviceTableCell}>
+                              <button 
+                                style={{...styles.btnDanger, ...styles.btnSmall}} 
+                                onClick={() => removeDevice(roomIndex, actualIndex)}
+                                onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
+                                onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                              >
+                                ✕
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  {room.isSaved && (
+                    <button 
+                      style={{...styles.btnSuccess, ...styles.btnSmall}} 
+                      onClick={() => saveNewDevices(roomIndex)}
+                      onMouseOver={(e) => e.target.style.transform = 'translateY(-1px)'}
+                      onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+                    >
+                      💾 Save These Devices
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {room.isSaved && (
+                <button 
+                  style={{...styles.btn, ...styles.btnSmall}} 
+                  onClick={() => addDevice(roomIndex)}
+                  onMouseOver={(e) => e.target.style.transform = 'translateY(-1px)'}
+                  onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+                >
+                  ➕ Add Device
+                </button>
+              )}
             </div>
           ))}
 
           <button 
             style={styles.btn} 
             onClick={addRoom}
-            onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+            onMouseOver={(e) => e.target.style.transform = 'translateY(-1px)'}
             onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
           >
-            Add New Room
+            🏠 Add New Room
           </button>
 
           <div style={styles.actions}>
             <button 
-              style={styles.actionBtn} 
-              onClick={saveSetup}
-              onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-            >
-              Save Setup to Database
-            </button>
-            <button 
-              style={{...styles.actionBtn, background: 'linear-gradient(135deg, #22c55e, #16a34a)'}} 
+              style={styles.actionBtnSuccess} 
               onClick={loadFromDatabase}
-              onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+              onMouseOver={(e) => e.target.style.transform = 'translateY(-1px)'}
               onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
             >
-              Load from Database
+              🔄 Refresh from Database
             </button>
             <button 
               style={styles.actionBtnDanger} 
               onClick={reset}
-              onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+              onMouseOver={(e) => e.target.style.transform = 'translateY(-1px)'}
               onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
             >
-              Reset All Data
+              🗑️ Reset All
             </button>
           </div>
 
           {rooms.length > 0 && (
             <div style={styles.summaryContainer}>
-              <h3 style={styles.summaryTitle}>Setup Summary</h3>
+              <h3 style={styles.summaryTitle}>📊 Setup Summary</h3>
               <div style={styles.summaryStats}>
                 <div style={styles.statItem}>
                   <div style={styles.statValue}>{rooms.length}</div>
@@ -597,7 +841,7 @@ const RoomSetup = () => {
                 </div>
                 <div style={styles.statItem}>
                   <div style={styles.statValue}>{getTotalPower().toFixed(0)}W</div>
-                  <div style={styles.statLabel}>Total Power</div>
+                  <div style={styles.statLabel}>Total Power Usage</div>
                 </div>
               </div>
             </div>
@@ -606,6 +850,11 @@ const RoomSetup = () => {
       </main>
     </div>
   );
+};
+
+RoomSetup.propTypes = {
+  email: PropTypes.string.isRequired,
+  setEmail: PropTypes.func.isRequired,
 };
 
 export default RoomSetup;

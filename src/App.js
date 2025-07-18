@@ -115,7 +115,7 @@ function App() {
             
             <Route path="/home" element={<Home />} />
             <Route path="/electricity" element={<Electricity />} />
-            <Route path="/room-setup" element={<RoomSetup />} />
+            <Route path="/room-setup" element={<RoomSetup email={email} setEmail={setEmail} />} />
             <Route path="/groceries" element={<Groceries />} />
             <Route path="/predict-bills" element={<PredictBills />} />
           </Routes>
