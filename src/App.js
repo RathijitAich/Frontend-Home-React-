@@ -55,6 +55,15 @@ const ConditionalNavbar = ({ email, setEmail, worker_email, setWorkerEmail }) =>
 
 function App() {
   // Email
+
+  //background color for all pages
+
+  useEffect(() => {
+    document.body.style.background = "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)";
+    return () => {
+      document.body.style.background = "";
+    };
+  }, []);
   const [email, setEmail] = useState(() => localStorage.getItem("email") || "");
   useEffect(() => {
     localStorage.setItem("email", email);

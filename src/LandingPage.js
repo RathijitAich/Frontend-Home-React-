@@ -266,12 +266,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta" data-aos="zoom-in">
-        <h2>Ready to simplify your home management?</h2>
-        <p>Join thousands of homeowners who are saving time and reducing stress.</p>
-        <Link to="/register" className="cta-button">Get Started Today</Link>
-      </section>
+     
 
       {/* Contact Section */}
       <section className="contact">
@@ -284,46 +279,25 @@ const LandingPage = () => {
               <i className="fas fa-envelope"></i>
               <div>
                 <h3>Email</h3>
-                <p>support@homemanager.com</p>
+                <p>u2104001@student.cuet.ac.bd</p>
+                <p>u2104005@student.cuet.ac.bd</p>
+                <p>u2104014@student.cuet.ac.bd</p>
               </div>
             </div>
-            <div className="contact-item">
-              <i className="fas fa-phone"></i>
-              <div>
-                <h3>Phone</h3>
-                <p>+123 456 7890</p>
-              </div>
-            </div>
+            
             <div className="contact-item">
               <i className="fas fa-map-marker-alt"></i>
               <div>
                 <h3>Address</h3>
-                <p>123 Main Street, Cityville, State 12345</p>
+                <p>Chittagong, Bangladesh</p>
               </div>
             </div>
             <div className="social-links">
-              <a href="#"><i className="fab fa-facebook-f"></i></a>
-              <a href="#"><i className="fab fa-twitter"></i></a>
-              <a href="#"><i className="fab fa-instagram"></i></a>
-              <a href="#"><i className="fab fa-linkedin-in"></i></a>
+              <a href="https://www.facebook.com"><i className="fab fa-facebook-f"></i></a>
+              <a href="https://www.twitter.com"><i className="fab fa-twitter"></i></a>
+              <a href="https://www.instagram.com"><i className="fab fa-instagram"></i></a>
+              <a href="https://www.linkedin.com"><i className="fab fa-linkedin-in"></i></a>
             </div>
-          </div>
-          <div className="contact-form" data-aos="fade-left">
-            <form>
-              <div className="form-group">
-                <input type="text" placeholder="Your Name" required />
-              </div>
-              <div className="form-group">
-                <input type="email" placeholder="Your Email" required />
-              </div>
-              <div className="form-group">
-                <input type="text" placeholder="Subject" />
-              </div>
-              <div className="form-group">
-                <textarea placeholder="Your Message" rows="5" required></textarea>
-              </div>
-              <button type="submit" className="submit-btn">Send Message</button>
-            </form>
           </div>
         </div>
       </section>
@@ -909,6 +883,7 @@ h2 {
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
+  
 }
   
 .contact-info {
