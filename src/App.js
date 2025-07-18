@@ -17,6 +17,7 @@ import ViewJobs from './ViewJobs';
 import CurrentJob from './CurrentJob';
 import Home from './pages/Home';
 import Electricity from './pages/Electricity';
+import RoomSetup from './pages/RoomSetup';
 import Groceries from './pages/Groceries';
 import Approve from './Approve';
 
@@ -38,6 +39,7 @@ const ConditionalNavbar = ({ email, setEmail, worker_email, setWorkerEmail }) =>
     '/review-worker',
     '/home',
     '/electricity',
+    '/room-setup',
     '/groceries'
   ];
   
@@ -107,6 +109,7 @@ function App() {
             
             <Route path="/home" element={<Home />} />
             <Route path="/electricity" element={<Electricity />} />
+            <Route path="/room-setup" element={<RoomSetup />} />
             <Route path="/groceries" element={<Groceries />} />
           </Routes>
         </div>

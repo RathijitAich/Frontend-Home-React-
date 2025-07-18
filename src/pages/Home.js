@@ -6,9 +6,15 @@ const Home = () => {
 
   const tools = [
     {
+      icon: '🏠',
+      title: 'Room Setup',
+      description: 'Configure your rooms and electrical devices for accurate expense tracking and management.',
+      path: '/room-setup'
+    },
+    {
       icon: '⚡',
-      title: 'Electricity Expense Calculator',
-      description: 'Track your electricity usage by room and device to estimate and manage your electricity expenses.',
+      title: 'Electricity Bill Calculator',
+      description: 'Calculate your electricity expenses based on your configured rooms and devices.',
       path: '/electricity'
     },
     {
@@ -149,6 +155,10 @@ const Home = () => {
 
         .tool-card:nth-child(2) {
           animation-delay: 0.6s;
+        }
+
+        .tool-card:nth-child(3) {
+          animation-delay: 0.8s;
         }
 
         .tool-card::before {

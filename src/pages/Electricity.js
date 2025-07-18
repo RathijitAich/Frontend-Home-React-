@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Electricity = () => {
@@ -8,49 +8,13 @@ const Electricity = () => {
   const [period, setPeriod] = useState('daily');
   const [result, setResult] = useState(null);
 
-  const addRoom = () => {
-    setRooms([...rooms, {
-      id: Date.now(),
-      name: '',
-      devices: [{ id: Date.now() + 1, name: '', watts: '', hours: '', quantity: 1 }]
-    }]);
-  };
-
-  const updateRoom = (index, field, value) => {
-    const updated = [...rooms];
-    updated[index][field] = value;
-    setRooms(updated);
-  };
-
-  const addDevice = (roomIndex) => {
-    const updated = [...rooms];
-    updated[roomIndex].devices.push({
-      id: Date.now(),
-      name: '',
-      watts: '',
-      hours: '',
-      quantity: 1
-    });
-    setRooms(updated);
-  };
-
-  const updateDevice = (roomIndex, deviceIndex, field, value) => {
-    const updated = [...rooms];
-    updated[roomIndex].devices[deviceIndex][field] = value;
-    setRooms(updated);
-  };
-
-  const removeDevice = (roomIndex, deviceIndex) => {
-    const updated = [...rooms];
-    updated[roomIndex].devices.splice(deviceIndex, 1);
-    setRooms(updated);
-  };
-
-  const removeRoom = (index) => {
-    const updated = [...rooms];
-    updated.splice(index, 1);
-    setRooms(updated);
-  };
+  // Load rooms from localStorage on component mount
+  useEffect(() => {
+    const savedRooms = localStorage.getItem('homeRooms');
+    if (savedRooms) {
+      setRooms(JSON.parse(savedRooms));
+    }
+  }, []);
 
   const calculate = () => {
     let totalKWh = 0;
@@ -67,12 +31,12 @@ const Electricity = () => {
     const total = totalKWh * unitCost * multiplier;
     setResult({
       cost: total.toFixed(2),
-      period
+      period,
+      totalKWh: totalKWh.toFixed(2)
     });
   };
 
   const reset = () => {
-    setRooms([]);
     setUnitCost(5.0);
     setPeriod('daily');
     setResult(null);
@@ -124,6 +88,22 @@ const Electricity = () => {
       alignItems: 'center',
       gap: '0.5rem',
     },
+    setupBtn: {
+      position: 'absolute',
+      top: '2rem',
+      right: '2rem',
+      background: 'rgba(34, 197, 94, 0.9)',
+      color: '#ffffff',
+      border: '1px solid rgba(255, 255, 255, 0.3)',
+      padding: '0.75rem 1.5rem',
+      borderRadius: '12px',
+      fontWeight: '500',
+      transition: 'all 0.3s ease',
+      cursor: 'pointer',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+    },
     container: {
       maxWidth: '1200px',
       margin: '0 auto',
@@ -142,77 +122,64 @@ const Electricity = () => {
       marginBottom: '2rem',
       color: '#1e293b',
     },
-    roomContainer: {
+    summaryContainer: {
       marginBottom: '2rem',
-      border: '1px solid #e2e8f0',
       padding: '1.5rem',
-      borderRadius: '16px',
       background: '#f8fafc',
-      transition: 'all 0.3s ease',
-    },
-    roomHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '1.5rem',
-      gap: '1rem',
-    },
-    roomHeaderInput: {
-      flex: 1,
-      fontSize: '1.1rem',
-      fontWeight: '500',
+      borderRadius: '16px',
       border: '1px solid #e2e8f0',
-      borderRadius: '8px',
-      padding: '0.75rem',
-      transition: 'all 0.3s ease',
-      background: '#ffffff',
     },
-    deviceItem: {
+    summaryTitle: {
+      fontSize: '1.2rem',
+      fontWeight: '600',
+      color: '#1e293b',
+      marginBottom: '1rem',
+    },
+    roomSummary: {
       display: 'grid',
-      gridTemplateColumns: '2fr 1fr 1fr 1fr auto',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
       gap: '1rem',
       marginBottom: '1rem',
+    },
+    roomSummaryItem: {
       padding: '1rem',
       background: '#ffffff',
-      borderRadius: '12px',
-      border: '1px solid #e2e8f0',
-      transition: 'all 0.3s ease',
-    },
-    deviceInput: {
-      border: '1px solid #e2e8f0',
       borderRadius: '8px',
-      padding: '0.75rem',
-      fontSize: '0.9rem',
-      transition: 'all 0.3s ease',
-      background: '#ffffff',
+      border: '1px solid #e2e8f0',
     },
-    btn: {
+    roomName: {
+      fontWeight: '600',
+      color: '#1e293b',
+      marginBottom: '0.5rem',
+    },
+    deviceCount: {
+      fontSize: '0.9rem',
+      color: '#64748b',
+    },
+    noDataMessage: {
+      textAlign: 'center',
+      color: '#64748b',
+      fontSize: '1.1rem',
+      margin: '2rem 0',
+      padding: '2rem',
+      background: '#f8fafc',
+      borderRadius: '12px',
+      border: '2px dashed #e2e8f0',
+    },
+    setupPrompt: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
       background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
       color: '#ffffff',
       padding: '0.75rem 1.5rem',
-      border: 'none',
       borderRadius: '12px',
-      cursor: 'pointer',
+      textDecoration: 'none',
       fontWeight: '500',
-      fontSize: '0.9rem',
       transition: 'all 0.3s ease',
-      position: 'relative',
-      overflow: 'hidden',
-    },
-    btnDanger: {
-      background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-      color: '#ffffff',
-      padding: '0.75rem 1.5rem',
+      cursor: 'pointer',
       border: 'none',
-      borderRadius: '12px',
-      cursor: 'pointer',
-      fontWeight: '500',
-      fontSize: '0.9rem',
-      transition: 'all 0.3s ease',
-    },
-    btnSmall: {
-      fontSize: '0.85rem',
-      padding: '0.5rem 1rem',
+      marginTop: '1rem',
     },
     inputGroup: {
       marginTop: '2rem',
@@ -316,13 +283,21 @@ const Electricity = () => {
       fontSize: '1.1rem',
       marginBottom: 0,
     },
+    resultDetails: {
+      marginTop: '1rem',
+      padding: '1rem',
+      background: 'rgba(255, 255, 255, 0.5)',
+      borderRadius: '8px',
+      fontSize: '0.9rem',
+      color: '#64748b',
+    },
   };
 
   return (
     <div style={styles.electricityPage}>
       <header style={styles.electricityHeader}>
-        <h1 style={styles.title}>Electricity Expense</h1>
-        <p style={styles.subtitle}>Track your electricity consumption and estimate costs</p>
+        <h1 style={styles.title}>Electricity Bill Calculator</h1>
+        <p style={styles.subtitle}>Calculate your electricity expenses based on your room setup</p>
         <button 
           onClick={() => navigate('/home')} 
           style={styles.backBtn}
@@ -331,105 +306,49 @@ const Electricity = () => {
         >
           ← Back to Home
         </button>
+        <button 
+          onClick={() => navigate('/room-setup')} 
+          style={styles.setupBtn}
+          onMouseOver={(e) => e.target.style.background = 'rgba(34, 197, 94, 1)'}
+          onMouseOut={(e) => e.target.style.background = 'rgba(34, 197, 94, 0.9)'}
+        >
+          Setup Rooms →
+        </button>
       </header>
 
       <main style={styles.container}>
         <div style={styles.calculatorContainer}>
-          <h2 style={styles.sectionTitle}>Add Rooms and Devices</h2>
+          <h2 style={styles.sectionTitle}>Room & Device Summary</h2>
 
-          {rooms.map((room, roomIndex) => (
-            <div style={styles.roomContainer} key={room.id}>
-              <div style={styles.roomHeader}>
-                <input
-                  type="text"
-                  placeholder="Room Name"
-                  value={room.name}
-                  onChange={(e) => updateRoom(roomIndex, 'name', e.target.value)}
-                  style={styles.roomHeaderInput}
-                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                />
-                <button 
-                  style={{...styles.btnDanger, ...styles.btnSmall}} 
-                  onClick={() => removeRoom(roomIndex)}
-                  onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                  onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-                >
-                  Remove Room
-                </button>
+          {rooms.length > 0 ? (
+            <div style={styles.summaryContainer}>
+              <h3 style={styles.summaryTitle}>Your Current Setup</h3>
+              <div style={styles.roomSummary}>
+                {rooms.map((room, index) => (
+                  <div key={room.id} style={styles.roomSummaryItem}>
+                    <div style={styles.roomName}>{room.name || `Room ${index + 1}`}</div>
+                    <div style={styles.deviceCount}>{room.devices.length} device(s)</div>
+                  </div>
+                ))}
               </div>
-
-              {room.devices.map((device, deviceIndex) => (
-                <div style={styles.deviceItem} key={device.id}>
-                  <input
-                    type="text"
-                    placeholder="Device Name"
-                    value={device.name}
-                    onChange={(e) => updateDevice(roomIndex, deviceIndex, 'name', e.target.value)}
-                    style={styles.deviceInput}
-                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Watts"
-                    value={device.watts}
-                    onChange={(e) => updateDevice(roomIndex, deviceIndex, 'watts', e.target.value)}
-                    style={styles.deviceInput}
-                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Hours"
-                    value={device.hours}
-                    onChange={(e) => updateDevice(roomIndex, deviceIndex, 'hours', e.target.value)}
-                    style={styles.deviceInput}
-                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Quantity"
-                    value={device.quantity}
-                    onChange={(e) => updateDevice(roomIndex, deviceIndex, 'quantity', e.target.value)}
-                    style={styles.deviceInput}
-                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-                  />
-                  <button 
-                    style={{...styles.btnDanger, ...styles.btnSmall}} 
-                    onClick={() => removeDevice(roomIndex, deviceIndex)}
-                    onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                    onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-
+            </div>
+          ) : (
+            <div style={styles.noDataMessage}>
+              <div>No rooms configured yet!</div>
+              <div>Set up your rooms and devices first to calculate electricity bills.</div>
               <button 
-                style={{...styles.btn, ...styles.btnSmall}} 
-                onClick={() => addDevice(roomIndex)}
+                onClick={() => navigate('/room-setup')}
+                style={styles.setupPrompt}
                 onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
                 onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
               >
-                Add Device
+                🏠 Setup Rooms & Devices
               </button>
             </div>
-          ))}
-
-          <button 
-            style={styles.btn} 
-            onClick={addRoom}
-            onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-            onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-          >
-            Add New Room
-          </button>
+          )}
 
           <div style={styles.inputGroup}>
-            <label style={styles.inputGroupLabel}>Unit Cost (Taka)</label>
+            <label style={styles.inputGroupLabel}>Unit Cost (Taka per kWh)</label>
             <input
               type="number"
               step="0.01"
@@ -464,12 +383,13 @@ const Electricity = () => {
 
           <div style={styles.actions}>
             <button 
-              style={styles.actionBtn} 
+              style={{...styles.actionBtn, ...(rooms.length === 0 ? {opacity: 0.5, cursor: 'not-allowed'} : {})}} 
               onClick={calculate}
-              onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-              onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+              disabled={rooms.length === 0}
+              onMouseOver={(e) => rooms.length > 0 && (e.target.style.transform = 'translateY(-2px)')}
+              onMouseOut={(e) => rooms.length > 0 && (e.target.style.transform = 'translateY(0)')}
             >
-              Calculate Expense
+              Calculate Bill
             </button>
             <button 
               style={styles.actionBtnDanger} 
@@ -477,15 +397,20 @@ const Electricity = () => {
               onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
               onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
             >
-              Reset
+              Reset Calculation
             </button>
           </div>
 
           {result && (
             <div style={styles.resultContainer}>
-              <h3 style={styles.resultTitle}>Estimated Electricity Expense</h3>
+              <h3 style={styles.resultTitle}>Estimated Electricity Bill</h3>
               <div style={styles.resultValue}>{result.cost} Taka</div>
               <p style={styles.resultPeriod}>per {result.period}</p>
+              <div style={styles.resultDetails}>
+                Total Energy Consumption: {result.totalKWh} kWh per {result.period === 'daily' ? 'day' : result.period === 'monthly' ? 'month' : 'year'}
+                <br />
+                Unit Rate: {unitCost} Taka per kWh
+              </div>
             </div>
           )}
         </div>
