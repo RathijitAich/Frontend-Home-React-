@@ -114,4 +114,4 @@ const PredictBills = () => {
   );
 };
 
-export default PredictBills;
+export default PredictBills;//bill
