@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { data, useNavigate } from 'react-router-dom';
 import PropTypes from "prop-types";
 
 const RoomSetup = ({email, setEmail}) => {
@@ -7,6 +7,9 @@ const RoomSetup = ({email, setEmail}) => {
   const [rooms, setRooms] = useState([]);
   const [loadedRooms, setLoadedRooms] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Room types extracted from device templates
+  const roomTypes = ["Bedroom", "Kitchen", "Bathroom", "Drawing Room", "Living Room", "Dining Room"];
 
   // Load from database on component mount
   useEffect(() => {
@@ -22,6 +25,7 @@ const RoomSetup = ({email, setEmail}) => {
     const newRoom = {
       id: Date.now(),
       name: '',
+      type: '',
       devices: [],
       isNew: true,
       isSaved: false
@@ -72,7 +76,8 @@ const RoomSetup = ({email, setEmail}) => {
             'Content-Type': 'application/json',
           }
         });
-
+        
+        
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || 'Failed to delete room');
@@ -114,8 +119,14 @@ const RoomSetup = ({email, setEmail}) => {
         return;
       }
 
+      if (!room.type) {
+        alert('Please select a room type.');
+        return;
+      }
+
       const roomData = {
         roomName: room.name,
+        roomType: room.type,
         homeowner: {
           email: userEmail
         }
@@ -128,7 +139,8 @@ const RoomSetup = ({email, setEmail}) => {
         },
         body: JSON.stringify(roomData)
       });
-
+      
+      console.log('data sent to backend:', roomData);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to save room');
@@ -245,6 +257,7 @@ const RoomSetup = ({email, setEmail}) => {
       const loadedRooms = data.rooms.map((roomData, index) => ({
         id: Date.now() + index,
         name: roomData.room.roomName,
+        type: roomData.room.roomType || '',
         devices: roomData.devices.map((device, deviceIndex) => ({
           id: Date.now() + index * 1000 + deviceIndex,
           name: device.deviceName,
@@ -347,11 +360,15 @@ const RoomSetup = ({email, setEmail}) => {
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
     },
     roomHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr auto',
+      alignItems: 'end',
       marginBottom: '1.5rem',
       gap: '1rem',
+    },
+    roomInputGroup: {
+      display: 'flex',
+      flexDirection: 'column',
     },
     roomHeaderLabel: {
       fontSize: '0.875rem',
@@ -360,7 +377,6 @@ const RoomSetup = ({email, setEmail}) => {
       marginBottom: '0.5rem',
     },
     roomHeaderInput: {
-      flex: 1,
       fontSize: '1rem',
       fontWeight: '500',
       border: '1px solid #d1d5db',
@@ -368,6 +384,16 @@ const RoomSetup = ({email, setEmail}) => {
       padding: '0.75rem',
       transition: 'all 0.2s ease',
       background: '#ffffff',
+    },
+    roomTypeSelect: {
+      fontSize: '1rem',
+      fontWeight: '500',
+      border: '1px solid #d1d5db',
+      borderRadius: '8px',
+      padding: '0.75rem',
+      transition: 'all 0.2s ease',
+      background: '#ffffff',
+      cursor: 'pointer',
     },
     disabledInput: {
       backgroundColor: '#f3f4f6',
@@ -630,11 +656,11 @@ const RoomSetup = ({email, setEmail}) => {
               key={room.id}
             >
               <div style={styles.roomHeader}>
-                <div style={{ flex: 1 }}>
+                <div style={styles.roomInputGroup}>
                   <div style={styles.roomHeaderLabel}>Room Name</div>
                   <input
                     type="text"
-                    placeholder="Enter room name (e.g., Living Room, Kitchen)"
+                    placeholder="Enter room name (e.g., Master Bedroom)"
                     value={room.name}
                     onChange={(e) => updateRoom(roomIndex, 'name', e.target.value)}
                     style={{
@@ -644,7 +670,24 @@ const RoomSetup = ({email, setEmail}) => {
                     disabled={room.isSaved}
                   />
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+                <div style={styles.roomInputGroup}>
+                  <div style={styles.roomHeaderLabel}>Room Type</div>
+                  <select
+                    value={room.type}
+                    onChange={(e) => updateRoom(roomIndex, 'type', e.target.value)}
+                    style={{
+                      ...styles.roomTypeSelect,
+                      ...(room.isSaved ? styles.disabledInput : {})
+                    }}
+                    disabled={room.isSaved}
+                  >
+                    <option value="">Select room type</option>
+                    {roomTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
                   {room.isNew && !room.isSaved && (
                     <button 
                       style={{...styles.btnSuccess, ...styles.btnSmall}} 
