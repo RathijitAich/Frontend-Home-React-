@@ -370,9 +370,10 @@ const Dashboard = ({ email, setEmail , worker_email }) => {
               </div>
               <h2>Predict Your Bills</h2>
               <p>Analyze past utility usage and predict future expenses with our smart estimator.</p>
-              <a href="bill-predictor.html" className="feature-btn">
-                View Predictions <i className="fas fa-arrow-right"></i>
-              </a>
+              <Link to="/predict-bills" className="feature-btn">
+  View Predictions <i className="fas fa-arrow-right"></i>
+</Link>
+
             </div>
           </div>
         </section>

@@ -22,6 +22,11 @@ import Groceries from './pages/Groceries';
 import Approve from './Approve';
 
 import Chat from './Chat_experiment';
+// src/App.jsx or wherever your routes are defined
+import PredictBills from './pages/PredictBills';
+
+<Route path="/predict-bills" element={<PredictBills />} />
+
 
 // Component to conditionally render Navbar
 const ConditionalNavbar = ({ email, setEmail, worker_email, setWorkerEmail }) => {
@@ -40,7 +45,8 @@ const ConditionalNavbar = ({ email, setEmail, worker_email, setWorkerEmail }) =>
     '/home',
     '/electricity',
     '/room-setup',
-    '/groceries'
+    '/groceries',
+    '/predict-bills'
   ];
   
   const shouldShowNavbar = navbarPaths.includes(location.pathname);
@@ -111,6 +117,7 @@ function App() {
             <Route path="/electricity" element={<Electricity />} />
             <Route path="/room-setup" element={<RoomSetup />} />
             <Route path="/groceries" element={<Groceries />} />
+            <Route path="/predict-bills" element={<PredictBills />} />
           </Routes>
         </div>
       </div>
