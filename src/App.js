@@ -24,6 +24,7 @@ import Approve from './Approve';
 import Chat from './Chat_experiment';
 // src/App.jsx or wherever your routes are defined
 import PredictBills from './pages/PredictBills';
+import Prediction from './Prediction_Electricity'
 
 <Route path="/predict-bills" element={<PredictBills />} />
 
@@ -118,6 +119,7 @@ function App() {
             <Route path="/room-setup" element={<RoomSetup email={email} setEmail={setEmail} />} />
             <Route path="/groceries" element={<Groceries />} />
             <Route path="/predict-bills" element={<PredictBills />} />
+            <Route path="/electricity-prediction" element={<Prediction email={email} setEmail={setEmail} />} />
           </Routes>
         </div>
       </div>

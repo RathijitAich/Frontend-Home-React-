@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './PredictBills.css';
 
 const bills = [
@@ -6,21 +7,29 @@ const bills = [
     type: 'Electricity',
     description: 'Estimate your electricity usage and future charges with AI-powered predictions.',
     icon: '⚡',
+    route: '/electricity-prediction'
   },
   {
     type: 'Gas',
     description: 'Analyze gas usage patterns and predict monthly costs with precision.',
     icon: '🔥',
+    route: '/gas-prediction'
   },
   {
     type: 'Water',
     description: 'Track water consumption and forecast future charges intelligently.',
     icon: '💧',
+    route: '/water-prediction'
   },
 ];
 
 const PredictBills = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
+  const navigate = useNavigate();
+
+  const handleGetStarted = (route) => {
+    navigate(route);
+  };
 
   return (
     <div className="predict-wrapper">
@@ -74,7 +83,10 @@ const PredictBills = () => {
                   <h2>{bill.type} Bill</h2>
                   <p>{bill.description}</p>
                   
-                  <button className="start-btn">
+                  <button 
+                    className="start-btn"
+                    onClick={() => handleGetStarted(bill.route)}
+                  >
                     <span>Get Started</span>
                     <svg className="btn-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -114,4 +126,4 @@ const PredictBills = () => {
   );
 };
 
-export default PredictBills;//bill
+export default PredictBills;
