@@ -324,7 +324,7 @@ const Dashboard = ({ email, setEmail , worker_email }) => {
               <i className="far fa-calendar-alt"></i>
               <span style={{ marginLeft: 8 }}>{currentDate}</span>
             </div>
-            <p>Here's what's happening with your home today.</p>
+            {/* <p>Here's what's happening with your home today.</p>
             <div className="quick-stats">
               <div className="stat">
                 <h3>Pending Tasks</h3>
@@ -338,7 +338,7 @@ const Dashboard = ({ email, setEmail , worker_email }) => {
                 <h3>Active Rooms</h3>
                 <p>4</p>
               </div>
-            </div>
+            </div> */}
           </div>
           <div className="feature-cards">
             {/* Room Setup Card */}

@@ -71,7 +71,6 @@ const Navbar = ({ email, setEmail, worker_email, setWorkerEmail }) => {
     } else if (user.type === 'worker') {
       return [
         { path: "/worker-dashboard", icon: "fas fa-tachometer-alt", label: "Dashboard" },
-        { path: "/notifications", icon: "fas fa-bell", label: "Notifications" },
         {path: "/chat", icon: "fas fa-comments", label: "Chat"},
         // Add more worker-specific links here if needed
         // { path: "/my-jobs", icon: "fas fa-briefcase", label: "My Jobs" },

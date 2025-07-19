@@ -45,328 +45,374 @@ const WorkerDashboard = ({ worker_email, setWorkerEmail }) => {
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to logout?")) {
-      // Clear worker email
       setWorkerEmail("");
-      // Clear any localStorage data if needed
       localStorage.removeItem("worker_email");
-      // Optionally clear any other worker-related data
       setWorker(null);
-      navigate("/Worker_login"); // Redirect to Worker Login page
+      navigate("/Worker_login");
     }
   };
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <div>Loading...</div>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        backgroundColor: '#F8FAFC',
+        fontSize: '1.1rem',
+        color: '#64748B'
+      }}>
+        <div>Loading worker dashboard...</div>
       </div>
     );
   }
 
   return (
     <div>
-      {/* Inline styles and FontAwesome CDN */}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
       <style>{`
-         *{
-        font-family: 'Poppins', sans-serif;
-        }
-        .dashboard {
-          padding: 30px 0;
-        }
-        .welcome-card {
-          background-color: var(--worker-color,rgb(62, 44, 114));
-          color: var(--white, #fff);
-          padding: 40px;
-          border-radius: 0;
-          margin-bottom: 40px;
-        }
-        .welcome-card h1 {
-          margin-bottom: 15px;
-          font-size: 2.2rem;
-        }
-        .date-display {
-          font-weight: 500;
-          margin-bottom: 15px;
-          font-size: 1.1rem;
-        }
-        .quick-stats {
-          display: flex;
-          gap: 20px;
-          margin-top: 30px;
-        }
-        .stat {
-          background: rgba(255, 255, 255, 0.2);
-          padding: 15px;
-          flex: 1;
-          border-radius: 0;
-        }
-        .stat h3 {
-          font-size: 1rem;
-          margin-bottom: 5px;
-        }
-        .stat p {
-          font-size: 1.5rem;
-          font-weight: 600;
+        * {
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           margin: 0;
+          padding: 0;
+          box-sizing: border-box;
         }
-        .feature-cards {
-          display: flex;
-          gap: 30px;
-          flex-wrap: wrap;
+        
+        body {
+          background-color: #F8FAFC;
+          color: #1E293B;
         }
-        .feature-card {
-          flex: 1;
-          min-width: 300px;
-          background-color: var(--white, #fff);
-          padding: 30px;
-          border-radius: 0;
-          box-shadow: var(--shadow, 0 4px 6px -1px rgba(0,0,0,0.1));
-          transition: var(--transition, all 0.3s ease);
-          position: relative;
-          overflow: hidden;
-          border: 1px solid var(--gray-100, #f1f0ea);
+        
+        .dashboard-container {
+          min-height: 100vh;
+          background-color: #F8FAFC;
+          padding: 24px;
         }
-        .feature-card:hover {
-          transform: translateY(-10px);
-          box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0,0,0,0.1));
-          border-color: var(--worker-light, #10b981);
-        }
-        .feature-icon {
-          font-size: 2.5rem;
-          color: var(--worker-color, #059669);
-          margin-bottom: 20px;
-        }
-        .feature-card h2 {
-          font-size: 1.5rem;
-          margin-bottom: 15px;
-        }
-        .feature-card p {
-          color: var(--text-light, #6b6b6b);
-          margin-bottom: 25px;
-        }
-        .feature-btn {
-          display: inline-flex;
-          align-items: center;
-          padding: 10px 20px;
-          background-color: var(--worker-color, #059669);
-          color: var(--white, #fff);
-          border-radius: 0;
-          font-weight: 500;
-          transition: var(--transition, all 0.3s ease);
-          text-decoration: none;
-        }
-        .feature-btn i {
-          margin-left: 8px;
-          transition: var(--transition, all 0.3s ease);
-        }
-        .feature-btn:hover {
-          background-color: var(--worker-light, #10b981);
-          color: var(--white, #fff);
-        }
-        .feature-btn:hover i {
-          transform: translateX(5px);
-        }
-        .dashboard-navbar {
-          background-color: var(--white, #fff);
-          padding: 15px 30px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          box-shadow: var(--shadow, 0 4px 6px -1px rgba(0,0,0,0.1));
-          position: sticky;
-          top: 0;
-          z-index: 100;
-        }
-        .logo {
-          display: flex;
-          align-items: center;
-          font-weight: 700;
-          font-size: 1.3rem;
-          color: var(--worker-color, #059669);
-        }
-        .logo i {
-          margin-right: 10px;
-          font-size: 1.5rem;
-        }
-        .nav-links {
-          display: flex;
-          align-items: center;
-        }
-        .nav-links a {
-          margin-left: 25px;
-          color: var(--text-dark, #252525);
-          font-weight: 500;
-          transition: var(--transition, all 0.3s ease);
-          text-decoration: none;
-        }
-        .nav-links a:hover {
-          color: var(--worker-color, #059669);
-        }
-        .user-menu {
-          display: flex;
-          align-items: center;
-          cursor: pointer;
-          position: relative;
-        }
-        .user-avatar {
-          width: 40px;
-          height: 40px;
-          background-color: var(--gray-100, #f1f0ea);
-          border-radius: 0;
-          margin-right: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-        }
-        .user-name {
-          font-weight: 500;
-          margin-right: 15px;
-        }
-        .logout-btn {
-          background-color: #dc3545;
-          color: white;
-          border: none;
-          padding: 8px 15px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 0.9rem;
-          font-weight: 500;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .logout-btn:hover {
-          background-color: #c82333;
-          transform: translateY(-1px);
-        }
-        .logout-btn i {
-          font-size: 0.85rem;
-        }
+        
         .container {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 0 20px;
         }
-        .worker-info {
-          background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        
+        .welcome-section {
+          background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 50%, #60A5FA 100%);
           color: white;
-          padding: 20px;
-          border-radius: 8px;
+          padding: 32px;
+          border-radius: 16px;
+          margin-bottom: 32px;
+          box-shadow: 0 10px 25px rgba(30, 64, 175, 0.2);
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .welcome-section::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: 200px;
+          height: 200px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 50%;
+          transform: translate(50px, -50px);
+        }
+        
+        .welcome-content {
+          position: relative;
+          z-index: 1;
+        }
+        
+        .welcome-title {
+          font-size: 2.25rem;
+          font-weight: 700;
+          margin-bottom: 8px;
+          letter-spacing: -0.025em;
+        }
+        
+        .welcome-date {
+          font-size: 1.1rem;
+          font-weight: 500;
+          opacity: 0.9;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 24px;
+        }
+        
+        .worker-info-card {
+          background: white;
+          border-radius: 16px;
+          padding: 24px;
+          margin-bottom: 32px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+          border: 1px solid #E2E8F0;
+        }
+        
+        .worker-info-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
           margin-bottom: 20px;
+          color: #1E293B;
         }
-        .worker-info h3 {
-          margin-bottom: 10px;
+        
+        .worker-info-title {
+          font-size: 1.25rem;
+          font-weight: 600;
         }
+        
         .worker-details {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 15px;
-          margin-top: 15px;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 16px;
         }
+        
         .worker-detail {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
+          padding: 12px 16px;
+          background: #F8FAFC;
+          border-radius: 10px;
+          border-left: 4px solid #3B82F6;
         }
+        
         .worker-detail i {
           width: 20px;
+          color: #3B82F6;
+          font-size: 1rem;
         }
-        .status-badge {
+        
+        .worker-detail span {
+          color: #475569;
+          font-weight: 500;
+        }
+        
+        .feature-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+          gap: 24px;
+        }
+        
+        .feature-card {
+          background: white;
+          border-radius: 16px;
+          padding: 28px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+          border: 1px solid #E2E8F0;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .feature-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: linear-gradient(90deg, #3B82F6, #8B5CF6);
+          transform: scaleX(0);
+          transform-origin: left;
+          transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+          transform: translateY(-8px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+          border-color: #3B82F6;
+        }
+        
+        .feature-card:hover::before {
+          transform: scaleX(1);
+        }
+        
+        .feature-icon {
+          width: 64px;
+          height: 64px;
+          border-radius: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 20px;
+          font-size: 1.75rem;
+          transition: all 0.3s ease;
+        }
+        
+        .feature-card:nth-child(1) .feature-icon {
+          background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+          color: #2563EB;
+        }
+        
+        .feature-card:nth-child(2) .feature-icon {
+          background: linear-gradient(135deg, #F0FDF4, #DCFCE7);
+          color: #16A34A;
+        }
+        
+        .feature-card:nth-child(3) .feature-icon {
+          background: linear-gradient(135deg, #FDF4FF, #FAE8FF);
+          color: #A855F7;
+        }
+        
+        .feature-title {
+          font-size: 1.375rem;
+          font-weight: 600;
+          color: #1E293B;
+          margin-bottom: 12px;
+        }
+        
+        .feature-description {
+          color: #64748B;
+          line-height: 1.6;
+          margin-bottom: 24px;
+          font-size: 0.95rem;
+        }
+        
+        .feature-btn {
           display: inline-flex;
           align-items: center;
-          padding: 4px 12px;
-          border-radius: 12px;
-          font-size: 0.85rem;
+          gap: 8px;
+          padding: 12px 20px;
+          background: linear-gradient(135deg, #3B82F6, #2563EB);
+          color: white;
+          text-decoration: none;
+          border-radius: 10px;
           font-weight: 500;
-          text-transform: capitalize;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
         }
-        .status-available {
-          background-color: rgba(34, 197, 94, 0.1);
-          color: #16a34a;
+        
+        .feature-btn::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          transition: left 0.5s ease;
         }
-        .status-busy {
-          background-color: rgba(251, 146, 60, 0.1);
-          color: #ea580c;
+        
+        .feature-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+          color: white;
         }
-        .status-offline {
-          background-color: rgba(107, 114, 128, 0.1);
-          color: #6b7280;
+        
+        .feature-btn:hover::before {
+          left: 100%;
         }
-        @media (max-width: 900px) {
-          .feature-cards {
-            flex-direction: column;
-            gap: 20px;
+        
+        .feature-btn i {
+          transition: transform 0.3s ease;
+        }
+        
+        .feature-btn:hover i {
+          transform: translateX(4px);
+        }
+        
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 16px;
+          margin-top: 24px;
+        }
+        
+        .stat-card {
+          background: rgba(255, 255, 255, 0.15);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 12px;
+          padding: 20px;
+          text-align: center;
+        }
+        
+        .stat-value {
+          font-size: 2rem;
+          font-weight: 700;
+          margin-bottom: 4px;
+        }
+        
+        .stat-label {
+          font-size: 0.9rem;
+          opacity: 0.9;
+          font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+          .dashboard-container {
+            padding: 16px;
           }
-        }
-        @media (max-width: 600px) {
-          .welcome-card {
+          
+          .welcome-section {
+            padding: 24px;
+          }
+          
+          .welcome-title {
+            font-size: 1.875rem;
+          }
+          
+          .feature-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+          
+          .feature-card {
             padding: 20px;
           }
-          .feature-card {
-            padding: 18px;
-            min-width: unset;
-          }
-          .dashboard-navbar {
-            flex-direction: column;
-            gap: 10px;
-            padding: 10px 10px;
-          }
-          .nav-links {
-            order: 1;
-          }
-          .user-menu {
-            order: 2;
-          }
-          .container {
-            padding: 0 5px;
-          }
+          
           .worker-details {
             grid-template-columns: 1fr;
           }
-          .user-menu {
-            flex-direction: column;
-            gap: 10px;
+          
+          .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
           }
-          .logout-btn {
-            font-size: 0.8rem;
-            padding: 6px 12px;
+        }
+        
+        @media (max-width: 480px) {
+          .welcome-title {
+            font-size: 1.5rem;
+          }
+          
+          .feature-title {
+            font-size: 1.25rem;
+          }
+          
+          .stats-grid {
+            grid-template-columns: 1fr;
           }
         }
       `}</style>
 
-      {/* Navbar */}
-      {/* <nav className="dashboard-navbar">
-        <div className="logo">
-          <i className="fas fa-tools"></i>
-          WorkerPortal
-        </div>
-        <div className="nav-links">
-          <Link to="/WorkerDashboard"><i className="fas fa-tachometer-alt"></i> Dashboard</Link>
-          <Link to="/worker-notifications"><i className="fas fa-bell"></i> Notifications</Link>
-          <Link to="/chat" className="chat-link"><i className="fas fa-comments"></i> Chat</Link>
-          
-        </div>
-        <div className="user-menu">
-          <div className="user-avatar">{user.initials}</div>
-          <div className="user-name">{user.name}</div>
-          <button className="logout-btn" onClick={handleLogout}>
-            <i className="fas fa-sign-out-alt"></i>
-            Logout
-          </button>
-        </div>
-      </nav> */}
+      <div className="dashboard-container">
+        <div className="container">
+          {/* Welcome Section */}
+          <div className="welcome-section">
+            <div className="welcome-content">
+              <h1 className="welcome-title">Welcome back, {user.firstName}!</h1>
+              <div className="welcome-date">
+                <i className="fas fa-calendar-alt"></i>
+                <span>{currentDate}</span>
+              </div>
+              
+              {/* Quick Stats */}
+              
+            </div>
+          </div>
 
-      {/* Dashboard Content */}
-      <div className="container">
-        <section className="dashboard">
           {/* Worker Info Card */}
           {worker && (
-            <div className="worker-info">
-              <h3><i className="fas fa-user-circle"></i> Worker Profile</h3>
+            <div className="worker-info-card">
+              <div className="worker-info-header">
+                <i className="fas fa-user-circle"></i>
+                <h3 className="worker-info-title">Worker Profile</h3>
+              </div>
               <div className="worker-details">
                 <div className="worker-detail">
                   <i className="fas fa-envelope"></i>
@@ -384,85 +430,52 @@ const WorkerDashboard = ({ worker_email, setWorkerEmail }) => {
                   <i className="fas fa-map-marker-alt"></i>
                   <span>{worker.address}</span>
                 </div>
-                <div className="worker-detail">
-                  <i className="fas fa-signal"></i>
-                  <span className={`status-badge status-${worker.status?.toLowerCase() || 'available'}`}>
-                    {worker.status || 'Available'}
-                  </span>
-                </div>
-                <div className="worker-detail">
-                  <i className="fas fa-star"></i>
-                  <span>{worker.rating ? `${worker.rating}/5.0` : 'No rating yet'}</span>
-                </div>
               </div>
             </div>
           )}
 
-          <div className="welcome-card">
-            <h1>Welcome back, {user.firstName}</h1>
-            <div className="date-display">
-              <i className="far fa-calendar-alt"></i>
-              <span style={{ marginLeft: 8 }}>{currentDate}</span>
-            </div>
-            <p>Here's your work dashboard for today.</p>
-            <div className="quick-stats">
-              <div className="stat">
-                <h3>Available Jobs</h3>
-                <p>8</p>
-              </div>
-              <div className="stat">
-                <h3>Current Jobs</h3>
-                <p>2</p>
-              </div>
-              <div className="stat">
-                <h3>Completed Today</h3>
-                <p>1</p>
-              </div>
-              <div className="stat">
-                <h3>Rating</h3>
-                <p>{worker?.rating || '4.8'}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="feature-cards">
-            {/* Show Available Jobs Card */}
+          {/* Feature Cards */}
+          <div className="feature-grid">
             <div className="feature-card">
               <div className="feature-icon">
                 <i className="fas fa-search"></i>
               </div>
-              <h2>Available Jobs</h2>
-              <p>Browse and apply for maintenance jobs in your area that match your skills.</p>
+              <h2 className="feature-title">Available Jobs</h2>
+              <p className="feature-description">
+                Browse and apply for maintenance jobs in your area that match your skills and expertise.
+              </p>
               <Link to="/show-jobs" className="feature-btn">
                 View Jobs <i className="fas fa-arrow-right"></i>
               </Link>
             </div>
 
-            {/* Current Jobs Card */}
             <div className="feature-card">
               <div className="feature-icon">
                 <i className="fas fa-clipboard-list"></i>
               </div>
-              <h2>Current Jobs</h2>
-              <p>Manage your ongoing projects, update progress, and communicate with homeowners.</p>
+              <h2 className="feature-title">Current Jobs</h2>
+              <p className="feature-description">
+                Manage your ongoing projects, update progress, and communicate with homeowners effectively.
+              </p>
               <Link to="/current-jobs" className="feature-btn">
                 Manage Jobs <i className="fas fa-arrow-right"></i>
               </Link>
             </div>
 
-            {/* Job History Card */}
             <div className="feature-card">
               <div className="feature-icon">
                 <i className="fas fa-history"></i>
               </div>
-              <h2>Job History</h2>
-              <p>Review your completed jobs, ratings, and earnings history.</p>
+              <h2 className="feature-title">Job History</h2>
+              <p className="feature-description">
+                Review your completed jobs, customer ratings, and track your professional growth over time.
+              </p>
               <Link to="/job-history" className="feature-btn">
                 View History <i className="fas fa-arrow-right"></i>
               </Link>
             </div>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );
