@@ -364,7 +364,7 @@ const BillReminders = () => {
     }
   };
 
-  // Email sending function using EmailJS
+  // Fixed Email sending function with correct parameter names
   const sendEmail = async (templateParams) => {
     try {
       console.log('Sending email with params:', templateParams);
@@ -384,7 +384,7 @@ const BillReminders = () => {
     }
   };
 
-  // Test email configuration
+  // Fixed Test email configuration
   const testEmailConfiguration = async () => {
     const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('email');
     if (!userEmail) {
@@ -401,11 +401,11 @@ const BillReminders = () => {
     }
 
     try {
+      // Fixed parameter names to match your EmailJS template
       const templateParams = {
-        to_email: userEmail,
-        to_name: 'User',
-        from_name: 'Home Management System',
-        subject: '🏠 Test Email - Home Management System',
+        to_mail: userEmail,        // Changed from to_email to to_mail
+        to_name: 'User',           // This matches {{to_name}}
+        user_name: 'User',         // Added for {{user_name}} if needed
         message: `
 Hello!
 
@@ -439,7 +439,7 @@ Home Management Team
     }
   };
 
-  // Check for due reminders and send notifications
+  // Fixed Check for due reminders and send notifications
   const checkAndSendNotifications = async () => {
     const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('email');
     if (!userEmail) return;
@@ -508,11 +508,11 @@ Home Management Team
       try {
         const allMessages = notifications.map(n => n.message).join('\n\n');
         
+        // Fixed parameter names to match your EmailJS template
         const templateParams = {
-          to_email: userEmail,
-          to_name: 'User',
-          from_name: 'Home Management System',
-          subject: '🏠 Daily Reminders & Alerts - Home Management System',
+          to_mail: userEmail,        // Changed from to_email to to_mail
+          to_name: 'User',           // This matches {{to_name}}
+          user_name: 'User',         // Added for {{user_name}} if needed
           message: `
 Hello!
 
